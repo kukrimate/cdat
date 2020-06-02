@@ -56,7 +56,7 @@ void dynarr_get(dynarr *x, size_t i, size_t cnt, void *dest)
 void dynarr_addc(dynarr *x, char c)
 {
 	++x->elem_cnt;
-	if (x->elem_cnt > x->slot_cnt);
+	if (x->elem_cnt > x->slot_cnt)
 		dynarr_grow(x);
 
 	((char *) x->buffer)[x->elem_cnt - 1] = c;
@@ -65,7 +65,7 @@ void dynarr_addc(dynarr *x, char c)
 void dynarr_addp(dynarr *x, void *p)
 {
 	++x->elem_cnt;
-	if (x->elem_cnt > x->slot_cnt);
+	if (x->elem_cnt > x->slot_cnt)
 		dynarr_grow(x);
 
 	((void **) x->buffer)[x->elem_cnt - 1] = p;
