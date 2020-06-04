@@ -1,58 +1,69 @@
+/*
+ * Generic, dynamically growing array
+ *  Copyright (C) Mate Kurki, 2020
+ *  Part of libkm, released under the ISC license
+ */
 #ifndef DYNARR_H
 #define DYNARR_H
 
-typedef struct {
-	/* Slot size */
-	size_t slot_siz;
-	/* # of slots */
-	size_t slot_cnt;
-	/* # of elements */
-	size_t elem_cnt;
-	/* Buffer */
-	void  *buffer;
-} dynarr;
+/*
+ * Pre-allocated capacity
+ */
+#define DYNARR_PREALLOC 10
 
 /*
- * Allocate a dynamic array
+ * Grow factor when full
  */
-void dynarr_alloc(dynarr *x, size_t slot_siz);
-/*
- * Free a dynamic array
- */
-void dynarr_free(dynarr *x);
-/*
- * Returns the pointer to the ith element
- */
-void *dynarr_ptr(dynarr *x, size_t i);
+#define DYNARR_GROW_FACTOR 2
 
 /*
- * Add cnt elements from src
+ * Generate type specific definitons
  */
-void dynarr_add(dynarr *x, size_t cnt, void *src);
-/*
- * Store cnt elements starting from i into dest
- */
-void dynarr_get(dynarr *x, size_t i, size_t cnt, void *dest);
-
-/*
- * Add a character
- * NOTE: x->slot_siz must be sizeof(char)
- */
-void dynarr_addc(dynarr *x, char c);
-/*
- * Add a pointer
- * NOTE: x->slot_siz must be sizeof(void *)
- */
-void dynarr_addp(dynarr *x, void *p);
-/*
- * Return the ith character
- * NOTE: x->slot_siz must be sizeof(char)
- */
-char dynarr_getc(dynarr *x, size_t i);
-/*
- * Return the ith pointer
- * NOTE: x->slot_siz must be sizeof(void *)
- */
-void *dynarr_getp(dynarr *x, size_t i);
+#define dynarr_gen(T, A) \
+\
+struct dynarr##A { \
+	size_t nmemb; \
+	size_t avail; \
+	T *mem; \
+}; \
+\
+static inline void dynarr##A##_alloc(struct dynarr##A *self) \
+{ \
+	self->nmemb = 0; \
+	self->avail = DYNARR_PREALLOC; \
+	self->mem = reallocarray(NULL, self->avail, sizeof(T)); \
+} \
+\
+static inline void dynarr##A##_free(struct dynarr##A *self) \
+{ \
+	free(self->mem); \
+} \
+\
+static inline void dynarr##A##_clear(struct dynarr##A *self) \
+{ \
+	self->nmemb = 0; \
+} \
+\
+static inline void dynarr##A##_reserve(struct dynarr##A *self, size_t avail) \
+{ \
+	self->avail = avail; \
+	self->mem = reallocarray(self->mem, self->avail, sizeof(T)); \
+} \
+\
+static inline void dynarr##A##_add(struct dynarr##A *self, T m) \
+{ \
+	if (++self->nmemb > self->avail) \
+		dynarr##A##_reserve(self, self->nmemb * DYNARR_GROW_FACTOR); \
+	((T *) self->mem)[self->nmemb - 1] = m; \
+} \
+\
+static inline T dynarr##A##_get(struct dynarr##A *self, size_t i) \
+{ \
+	return ((T *) self->mem)[i]; \
+} \
+static inline T *dynarr##A##_ptr(struct dynarr##A *self, size_t i) \
+{ \
+	return (T *) self->mem + i; \
+}
 
 #endif

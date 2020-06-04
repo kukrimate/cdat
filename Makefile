@@ -2,11 +2,11 @@
 # Makefile to build libkm tests
 ##
 
-CFLAGS := -ansi -D_GNU_SOURCE -g
+CFLAGS := -std=c99 -Wall -Wpedantic -D_GNU_SOURCE -g
 
 all: test_dynarr test_htab
 
-test_dynarr: dynarr.o test_dynarr.o
+test_dynarr: test_dynarr.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 test_htab: htab.o test_htab.o

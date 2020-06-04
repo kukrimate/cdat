@@ -2,14 +2,21 @@
  * Tests for dynamic array
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
 #include "dynarr.h"
+
+dynarr_gen(char, c)
+dynarr_gen(void *, p)
 
 typedef struct {
 	short a, b;
 	int   c, d;
 } mystruct;
+
+dynarr_gen(mystruct, m)
 
 static mystruct teststructs[] = {
 	{ .a = 0, .b = 0, .c = 0, .d = 0 },
@@ -117,22 +124,18 @@ static mystruct teststructs[] = {
 
 static void test_arr()
 {
-	dynarr a;
+	struct dynarrm a;
 	size_t i;
 
 	printf("Running generic array test... ");
 
-	dynarr_alloc(&a, sizeof(mystruct));
+	dynarrm_alloc(&a);
 
-	for (i = 0; sizeof(teststructs) / sizeof(mystruct) - i > 5; i += 5)
-		dynarr_add(&a, 5, teststructs + i);
-	dynarr_add(&a, sizeof(teststructs) / sizeof(mystruct) - i,
-		teststructs + i);
+	for (i = 0; i < sizeof(teststructs) / sizeof(mystruct); ++i)
+		dynarrm_add(&a, teststructs[i]);
+	assert(!memcmp(dynarrm_ptr(&a, 0), teststructs, sizeof(teststructs)));
 
-	assert(!memcmp(dynarr_ptr(&a, 0), teststructs, sizeof(teststructs)));
-
-	dynarr_free(&a);
-
+	dynarrm_free(&a);
 	printf("OK\n");
 }
 
@@ -145,19 +148,18 @@ static char *concated = "Test string 1String2\n\raggagagkakjga{{$$strdata$$}}";
 
 static void test_chararr()
 {
-	dynarr a;
-	size_t i;
+	struct dynarrc a;
+	size_t i, j;
 
 	printf("Running character array test... ");
 
-	dynarr_alloc(&a, sizeof(char));
-	for (i = 0; i < strlen(strings[0]); ++i)
-		dynarr_addc(&a, strings[0][i]);
-	for (i = 1; i < sizeof(strings) / sizeof(char *); ++i)
-		dynarr_add(&a, strlen(strings[i]), strings[i]);
-	assert(!strncmp(concated, a.buffer, a.elem_cnt));
+	dynarrc_alloc(&a);
+	for (i = 0; i < sizeof(strings) / sizeof(char *); ++i)
+		for (j = 0; j < strlen(strings[i]); ++j)
+			dynarrc_add(&a, strings[i][j]);
+	assert(!strncmp(concated, a.mem, a.nmemb));
 
-	dynarr_free(&a);
+	dynarrc_free(&a);
 
 	printf("OK\n");
 }
@@ -171,19 +173,17 @@ static void *ptrs[] = {
 
 static void test_ptrarr()
 {
-	dynarr a;
+	struct dynarrp a;
 	size_t i;
 
 	printf("Running pointer array test... ");
 
-	dynarr_alloc(&a, sizeof(void *));
+	dynarrp_alloc(&a);
 	for (i = 0; i < sizeof(ptrs) / sizeof(void *); ++i)
-		dynarr_addp(&a, ptrs[i]);
-	dynarr_add(&a, sizeof(ptrs) / sizeof(void *), ptrs);
-	assert(!memcmp(ptrs, a.buffer, sizeof(ptrs)));
-	assert(!memcmp(ptrs, a.buffer + sizeof(ptrs), sizeof(ptrs)));
+		dynarrp_add(&a, ptrs[i]);
+	assert(!memcmp(ptrs, a.mem, sizeof(ptrs)));
 
-	dynarr_free(&a);
+	dynarrp_free(&a);
 
 	printf("OK\n");
 }
