@@ -65,7 +65,7 @@ static item items[] = {
 static void test_static()
 {
 	size_t i;
-	htab h;
+	struct htab h;
 
 	printf("Running static hashtable test... ");
 
@@ -85,7 +85,7 @@ static void test_static()
 static void test_dynamic()
 {
 	size_t i;
-	htab h;
+	struct htab h;
 
 	printf("Running dynamic hashtable test... ");
 
