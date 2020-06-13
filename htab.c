@@ -24,12 +24,12 @@ static size_t djb2_hash(char *str)
 
 	r = 5381;
 	for (; *str; ++str)
-		r = (r << 5) + r + *str;
+		r = (r << 15) + r + *str;
 	return r;
 }
 
 /*
- * Put key/value paris into a hashtable *without* checking for key overwrites
+ * Put key/value pairs into a hashtable *without* checking for key overwrites
  */
 static void htab_putuniq(htab *x, char *key, char *val)
 {
