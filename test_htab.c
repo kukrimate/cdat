@@ -1,13 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 #include "htab.h"
 
-typedef struct {
-	char *k, *v;
-} item;
+htab_gen(char *, char *, str_hash, str_cmp, strstr)
 
-static item items[] = {
+static inline size_t ui16_hash(uint16_t val)
+{
+	return val;
+}
+
+static inline int ui16_cmp(uint16_t val1, uint16_t val2)
+{
+	return val1 == val2;
+}
+
+htab_gen(uint16_t, char *, ui16_hash, ui16_cmp, ui16str)
+
+struct item {
+	char *k, *v;
+};
+
+static struct item items[] = {
 	{ .k = "some key 0", .v = "some val 0" },
 	{ .k = "some key 1", .v = "some val 1" },
 	{ .k = "some key 2", .v = "some val 2" },
@@ -62,47 +78,63 @@ static item items[] = {
 	{ .k = "duplicate", .v = "duplicate val" },
 };
 
-static void test_static()
+static void test_string()
 {
 	size_t i;
-	struct htab h;
+	struct htab(strstr) h;
 
-	printf("Running static hashtable test... ");
+	printf("Running string hashtable test... ");
 
-	htab_alloc(&h);
+	htab_alloc(strstr)(&h);
 
 	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
-		htab_put(&h, items[i].k, items[i].v, 0);
+		htab_put(strstr)(&h, items[i].k, items[i].v);
 	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
-		assert(htab_get(&h, items[i].k) == items[i].v);
+		assert(htab_get(strstr)(&h, items[i].k) == items[i].v);
 
-	htab_free(&h, 0);
+	htab_free(strstr)(&h);
 
 	printf("OK\n");
 }
 
+struct item1 {
+	uint16_t k;
+	char *v;
+};
 
-static void test_dynamic()
+static struct item1 items1[] = {
+	{ .k = 18, .v = "some val 16" },
+	{ .k = 65, .v = "some val 17" },
+	{ .k = 6215, .v = "some val 18" },
+	{ .k = 15555, .v = "some val 19" },
+	{ .k = 145, .v = "some val 20" },
+	{ .k = 5676, .v = "some val 21" },
+	{ .k = 4356, .v = "some val 22" },
+	{ .k = 42456, .v = "some val 23" },
+	{ .k = 54244, .v = "some val 24" },
+};
+
+static void test_ui16()
 {
 	size_t i;
-	struct htab h;
+	struct htab(ui16str) h;
 
-	printf("Running dynamic hashtable test... ");
+	printf("Running integer hashtable test... ");
 
-	htab_alloc(&h);
+	htab_alloc(ui16str)(&h);
 
-	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
-		htab_put(&h, strdup(items[i].k), strdup(items[i].v), 1);
-	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
-		assert(!strcmp(items[i].v, htab_get(&h, items[i].k)));
+	for (i = 0; i < sizeof(items1) / sizeof(items1[0]); ++i)
+		htab_put(ui16str)(&h, items1[i].k, items1[i].v);
+	for (i = 0; i < sizeof(items1) / sizeof(items1[0]); ++i)
+		assert(items1[i].v == htab_get(ui16str)(&h, items1[i].k));
 
-	htab_free(&h, 1);
+	htab_free(ui16str)(&h);
 
 	printf("OK\n");
 }
 
 int main()
 {
-	test_static();
-	test_dynamic();
+	test_string();
+	test_ui16();
 }

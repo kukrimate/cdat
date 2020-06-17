@@ -1,7 +1,7 @@
 /*
- * Generic, dynamically growing array
- *  Copyright (C) Mate Kurki, 2020
- *  Part of libkm, released under the ISC license
+ * Dynamically growing array
+ * Copyright (C) Mate Kurki, 2020
+ * Part of libkm, released under the ISC license
  */
 #ifndef DYNARR_H
 #define DYNARR_H
@@ -17,53 +17,48 @@
 #define DYNARR_GROW_FACTOR 2
 
 /*
- * Generate type specific definitons
+ * Generate type specific definitions
  */
 #define dynarr_gen(T, A) \
 \
 struct dynarr##A { \
 	size_t nmemb; \
 	size_t avail; \
-	T *mem; \
+	T *array; \
 }; \
 \
-static inline void dynarr##A##_alloc(struct dynarr##A *self) \
+static inline void dynarr_alloc##A(struct dynarr##A *self) \
 { \
 	self->nmemb = 0; \
 	self->avail = DYNARR_PREALLOC; \
-	self->mem = reallocarray(NULL, self->avail, sizeof(T)); \
+	self->array = reallocarray(NULL, self->avail, sizeof(T)); \
 } \
 \
-static inline void dynarr##A##_free(struct dynarr##A *self) \
+static inline void dynarr_free##A(struct dynarr##A *self) \
 { \
-	free(self->mem); \
+	free(self->array); \
 } \
 \
-static inline void dynarr##A##_clear(struct dynarr##A *self) \
-{ \
-	self->nmemb = 0; \
-} \
-\
-static inline void dynarr##A##_reserve(struct dynarr##A *self, size_t avail) \
+static inline void dynarr_reserve##A(struct dynarr##A *self, size_t avail) \
 { \
 	self->avail = avail; \
-	self->mem = reallocarray(self->mem, self->avail, sizeof(T)); \
+	self->array = reallocarray(self->array, self->avail, sizeof(T)); \
 } \
 \
-static inline void dynarr##A##_add(struct dynarr##A *self, T m) \
+static inline void dynarr_add##A(struct dynarr##A *self, T m) \
 { \
 	if (++self->nmemb > self->avail) \
-		dynarr##A##_reserve(self, self->nmemb * DYNARR_GROW_FACTOR); \
-	((T *) self->mem)[self->nmemb - 1] = m; \
-} \
-\
-static inline T dynarr##A##_get(struct dynarr##A *self, size_t i) \
-{ \
-	return ((T *) self->mem)[i]; \
-} \
-static inline T *dynarr##A##_ptr(struct dynarr##A *self, size_t i) \
-{ \
-	return (T *) self->mem + i; \
+		dynarr_reserve##A(self, self->nmemb * DYNARR_GROW_FACTOR); \
+	self->array[self->nmemb - 1] = m; \
 }
+
+/*
+ * Macros for nicer syntax
+ */
+#define dynarr(x)         dynarr##x
+#define dynarr_alloc(x)   dynarr_alloc##x
+#define dynarr_free(x)    dynarr_free##x
+#define dynarr_reserve(x) dynarr_reserve##x
+#define dynarr_add(x)     dynarr_add##x
 
 #endif

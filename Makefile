@@ -9,7 +9,7 @@ all: test_dynarr test_htab
 test_dynarr: test_dynarr.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
-test_htab: htab.o test_htab.o
+test_htab: test_htab.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
