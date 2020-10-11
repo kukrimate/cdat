@@ -1,23 +1,19 @@
+/*
+ * Unordered map tests
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include "htab.h"
+#include "map.h"
 
-htab_gen(char *, char *, str_hash, str_cmp, strstr)
+map_gen(char *, char *, djb2_hash, !strcmp, s)
 
-static inline size_t ui16_hash(uint16_t val)
-{
-	return val;
-}
-
-static inline int ui16_cmp(uint16_t val1, uint16_t val2)
-{
-	return val1 == val2;
-}
-
-htab_gen(uint16_t, char *, ui16_hash, ui16_cmp, ui16str)
+#define ihash(x) x
+#define icmp(x, y) x == y
+map_gen(int, char *, ihash, icmp, i)
 
 struct item {
 	char *k, *v;
@@ -81,18 +77,18 @@ static struct item items[] = {
 static void test_string()
 {
 	size_t i;
-	struct htab(strstr) h;
+	struct smap h;
 
-	printf("Running string hashtable test... ");
+	printf("Running string hasmaple test... ");
 
-	htab_alloc(strstr)(&h);
+	smap_init(&h);
 
 	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
-		htab_put(strstr)(&h, items[i].k, items[i].v);
+		smap_put(&h, items[i].k, items[i].v);
 	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
-		assert(htab_get(strstr)(&h, items[i].k) == items[i].v);
+		assert(smap_get(&h, items[i].k) == items[i].v);
 
-	htab_free(strstr)(&h);
+	smap_free(&h);
 
 	printf("OK\n");
 }
@@ -114,21 +110,21 @@ static struct item1 items1[] = {
 	{ .k = 54244, .v = "some val 24" },
 };
 
-static void test_ui16()
+static void test_int()
 {
 	size_t i;
-	struct htab(ui16str) h;
+	struct imap h;
 
-	printf("Running integer hashtable test... ");
+	printf("Running integer hasmaple test... ");
 
-	htab_alloc(ui16str)(&h);
+	imap_init(&h);
 
 	for (i = 0; i < sizeof(items1) / sizeof(items1[0]); ++i)
-		htab_put(ui16str)(&h, items1[i].k, items1[i].v);
+		imap_put(&h, items1[i].k, items1[i].v);
 	for (i = 0; i < sizeof(items1) / sizeof(items1[0]); ++i)
-		assert(items1[i].v == htab_get(ui16str)(&h, items1[i].k));
+		assert(items1[i].v == imap_get(&h, items1[i].k));
 
-	htab_free(ui16str)(&h);
+	imap_free(&h);
 
 	printf("OK\n");
 }
@@ -136,5 +132,5 @@ static void test_ui16()
 int main()
 {
 	test_string();
-	test_ui16();
+	test_int();
 }

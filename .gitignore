@@ -1,3 +1,2 @@
 *.o
-test_dynarr
-test_htab
+test_*

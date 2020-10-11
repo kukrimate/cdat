@@ -1,22 +1,22 @@
 /*
- * Tests for dynamic array
+ * Vector tests
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "vec.h"
 
-#include "dynarr.h"
-
-dynarr_gen(char, char)
-dynarr_gen(void *, pvoid)
+vec_gen(char, char_)
+vec_gen(void *, pvoid_)
 
 struct my {
 	short a, b;
 	int   c, d;
 };
 
-dynarr_gen(struct my, smy)
+vec_gen(struct my, my_)
 
 static struct my teststructs[] = {
 	{ .a = 0, .b = 0, .c = 0, .d = 0 },
@@ -124,18 +124,18 @@ static struct my teststructs[] = {
 
 static void test_arr()
 {
-	struct dynarr(smy) a;
+	struct my_vec a;
 	size_t i;
 
 	printf("Running generic array test... ");
 
-	dynarr_alloc(smy)(&a);
+	my_vec_init(&a);
 
 	for (i = 0; i < sizeof(teststructs) / sizeof(struct my); ++i)
-		dynarr_add(smy)(&a, teststructs[i]);
-	assert(!memcmp(a.array, teststructs, sizeof(teststructs)));
+		my_vec_add(&a, teststructs[i]);
+	assert(!memcmp(a.arr, teststructs, sizeof(teststructs)));
 
-	dynarr_free(smy)(&a);
+	my_vec_free(&a);
 	printf("OK\n");
 }
 
@@ -148,18 +148,18 @@ static char *concated = "Test string 1String2\n\raggagagkakjga{{$$strdata$$}}";
 
 static void test_chararr()
 {
-	struct dynarr(char) a;
+	struct char_vec a;
 	size_t i, j;
 
 	printf("Running character array test... ");
 
-	dynarr_alloc(char)(&a);
+	char_vec_init(&a);
 	for (i = 0; i < sizeof(strings) / sizeof(char *); ++i)
 		for (j = 0; j < strlen(strings[i]); ++j)
-			dynarr_add(char)(&a, strings[i][j]);
-	assert(!strncmp(concated, a.array, a.nmemb));
+			char_vec_add(&a, strings[i][j]);
+	assert(!strncmp(concated, a.arr, a.n));
 
-	dynarr_free(char)(&a);
+	char_vec_free(&a);
 
 	printf("OK\n");
 }
@@ -173,17 +173,17 @@ static void *ptrs[] = {
 
 static void test_ptrarr()
 {
-	struct dynarr(pvoid) a;
+	struct pvoid_vec a;
 	size_t i;
 
 	printf("Running pointer array test... ");
 
-	dynarr_alloc(pvoid)(&a);
+	pvoid_vec_init(&a);
 	for (i = 0; i < sizeof(ptrs) / sizeof(void *); ++i)
-		dynarr_add(pvoid)(&a, ptrs[i]);
-	assert(!memcmp(ptrs, a.array, sizeof(ptrs)));
+		pvoid_vec_add(&a, ptrs[i]);
+	assert(!memcmp(ptrs, a.arr, sizeof(ptrs)));
 
-	dynarr_free(pvoid)(&a);
+	pvoid_vec_free(&a);
 
 	printf("OK\n");
 }

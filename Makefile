@@ -4,20 +4,20 @@
 
 CFLAGS := -std=c99 -Wall -Wextra -Wpedantic -D_GNU_SOURCE -g
 
-all: test_dynarr test_htab
+all: test_vec test_map
 
-test_dynarr: test_dynarr.o
+test_vec: test_vec.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
-test_htab: test_htab.o
+test_map: test_map.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
-test: test_dynarr test_htab
-	valgrind ./test_dynarr
-	valgrind ./test_htab
+test: test_vec test_map
+	valgrind ./test_vec
+	valgrind ./test_map
 
 clean:
-	rm -f *.o test_dynarr test_htab
+	rm -f *.o test_vec test_map
