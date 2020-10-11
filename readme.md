@@ -20,4 +20,9 @@ Templated implementation of common data structures.
 		<td>Unordered map, using an hash table</td>
 		<td>std::unordered_map</td>
 	</tr>
+	<tr>
+		<td>set</td>
+		<td>Unordered set, using a value-less hash table</td>
+		<td>std::unordered_set</td>
+	</tr>
 </table>

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <assert.h>
 #include "map.h"
+#include "djb2.h"
 
 map_gen(char *, char *, djb2_hash, !strcmp, s)
 
@@ -79,7 +80,7 @@ static void test_string()
 	size_t i;
 	struct smap h;
 
-	printf("Running string hasmaple test... ");
+	printf("Running string map test... ");
 
 	smap_init(&h);
 
@@ -115,7 +116,7 @@ static void test_int()
 	size_t i;
 	struct imap h;
 
-	printf("Running integer hasmaple test... ");
+	printf("Running integer map test... ");
 
 	imap_init(&h);
 

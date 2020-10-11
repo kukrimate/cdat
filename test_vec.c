@@ -122,12 +122,12 @@ static struct my teststructs[] = {
 	{ .a = 85, .b = 10, .c = 32, .d = 51 },
 };
 
-static void test_arr()
+static void test_myvec()
 {
 	struct my_vec a;
 	size_t i;
 
-	printf("Running generic array test... ");
+	printf("Running struct vector test... ");
 
 	my_vec_init(&a);
 
@@ -146,12 +146,12 @@ static char *strings[] = {
 };
 static char *concated = "Test string 1String2\n\raggagagkakjga{{$$strdata$$}}";
 
-static void test_chararr()
+static void test_charvec()
 {
 	struct char_vec a;
 	size_t i, j;
 
-	printf("Running character array test... ");
+	printf("Running character vector test... ");
 
 	char_vec_init(&a);
 	for (i = 0; i < sizeof(strings) / sizeof(char *); ++i)
@@ -171,12 +171,12 @@ static void *ptrs[] = {
 	strings
 };
 
-static void test_ptrarr()
+static void test_ptrvec()
 {
 	struct pvoid_vec a;
 	size_t i;
 
-	printf("Running pointer array test... ");
+	printf("Running pointer vector test... ");
 
 	pvoid_vec_init(&a);
 	for (i = 0; i < sizeof(ptrs) / sizeof(void *); ++i)
@@ -190,7 +190,7 @@ static void test_ptrarr()
 
 int main()
 {
-	test_arr();
-	test_chararr();
-	test_ptrarr();
+	test_myvec();
+	test_charvec();
+	test_ptrvec();
 }

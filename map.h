@@ -95,18 +95,4 @@ prefix##map_get(struct prefix##map *self, ktype key) \
 	return NULL; \
 }
 
-/*
- * Daniel Bernstein's hash function
- */
-static inline unsigned int
-djb2_hash(const char *str)
-{
-	unsigned int r;
-
-	r = 5381;
-	for (; *str; ++str)
-		r = (r << 15) + r + *str;
-	return r;
-}
-
 #endif
