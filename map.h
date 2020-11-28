@@ -92,7 +92,13 @@ prefix##map_get(struct prefix##map *self, ktype key) \
 			i = (i + 1) % self->size) \
 		if (kcmp(self->arr[i].key, key)) \
 			return self->arr[i].val; \
-	return NULL; \
+	return (vtype) 0; \
 }
+
+/*
+ * Hash and compare for scaler values
+ */
+#define shash(x)   (x)
+#define scmp(x, y) (x == y)
 
 #endif
