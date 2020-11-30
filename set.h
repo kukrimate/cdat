@@ -22,7 +22,7 @@
 /*
  * Generate type specific definitions
  */
-#define set_gen(type, hash, cmp, prefix) \
+#define SET_GEN(type, hash, cmp, prefix) \
 \
 struct prefix##set { \
 	size_t load; \

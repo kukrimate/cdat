@@ -22,7 +22,7 @@
 /*
  * Generate type specific definitions
  */
-#define map_gen(ktype, vtype, khash, kcmp, prefix) \
+#define MAP_GEN(ktype, vtype, khash, kcmp, prefix) \
 \
 struct prefix##elem { \
 	ktype key; \

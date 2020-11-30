@@ -17,7 +17,7 @@
 /*
  * Generate type specific definitions
  */
-#define vec_gen(type, prefix) \
+#define VEC_GEN(type, prefix) \
 \
 struct prefix##vec { \
 	size_t n;    /* Number of elements */ \

@@ -8,15 +8,15 @@
 #include <assert.h>
 #include "vec.h"
 
-vec_gen(char, char_)
-vec_gen(void *, pvoid_)
+VEC_GEN(char, char_)
+VEC_GEN(void *, pvoid_)
 
 struct my {
 	short a, b;
 	int   c, d;
 };
 
-vec_gen(struct my, my_)
+VEC_GEN(struct my, my_)
 
 static struct my teststructs[] = {
 	{ .a = 0, .b = 0, .c = 0, .d = 0 },

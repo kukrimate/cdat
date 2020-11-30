@@ -10,11 +10,11 @@
 #include "map.h"
 #include "djb2.h"
 
-map_gen(char *, char *, djb2_hash, !strcmp, s)
+MAP_GEN(char *, char *, djb2_hash, !strcmp, s)
 
 #define ihash(x) x
 #define icmp(x, y) x == y
-map_gen(int, char *, ihash, icmp, i)
+MAP_GEN(int, char *, ihash, icmp, i)
 
 struct item {
 	char *k, *v;

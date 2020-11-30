@@ -12,7 +12,7 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
 
-set_gen(const char *, djb2_hash, !strcmp, s)
+SET_GEN(const char *, djb2_hash, !strcmp, s)
 
 /* List of string to add to the set */
 static const char *str_set[] = {
@@ -70,7 +70,7 @@ test_str(void)
 
 #define ihash(x) x
 #define icmp(x, y) x == y
-set_gen(int, ihash, icmp, i)
+SET_GEN(int, ihash, icmp, i)
 
 static void
 test_int(void)
