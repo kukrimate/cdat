@@ -19,14 +19,14 @@
  */
 #define VEC_GEN(type, prefix) \
 \
-struct prefix##vec { \
+typedef struct { \
 	size_t n;    /* Number of elements */ \
 	size_t size; /* Size of the arr */ \
 	type   *arr; /* The backing arr */ \
-}; \
+} prefix##vec; \
 \
 static inline void \
-prefix##vec_init(struct prefix##vec *self) \
+prefix##vec_init(prefix##vec *self) \
 { \
 	self->n = 0; \
 	self->size = VEC_PREALLOC; \
@@ -34,24 +34,33 @@ prefix##vec_init(struct prefix##vec *self) \
 } \
 \
 static inline void \
-prefix##vec_free(struct prefix##vec *self) \
+prefix##vec_free(prefix##vec *self) \
 { \
 	free(self->arr); \
 } \
 \
 static inline void \
-prefix##vec_reserve(struct prefix##vec *self, size_t size) \
+prefix##vec_reserve(prefix##vec *self, size_t size) \
 { \
 	self->size = size; \
 	self->arr = reallocarray(self->arr, self->size, sizeof(type)); \
 } \
 \
 static inline void \
-prefix##vec_add(struct prefix##vec *self, type m) \
+prefix##vec_add(prefix##vec *self, type m) \
 { \
 	if (++self->n > self->size) \
 		prefix##vec_reserve(self, self->n * VEC_GROW_FACTOR); \
 	self->arr[self->n - 1] = m; \
+} \
+\
+static inline type * \
+prefix##vec_push(prefix##vec *self) \
+{ \
+	if (++self->n > self->size) \
+		prefix##vec_reserve(self, self->n * VEC_GROW_FACTOR); \
+	return self->arr + self->n - 1; \
 }
+
 
 #endif

@@ -53,7 +53,7 @@ static const char *str_notset[] = {
 static void
 test_str(void)
 {
-	struct sset s;
+	sset s;
 	size_t i;
 
 	printf("Running string set test... ");
@@ -75,7 +75,7 @@ SET_GEN(int, ihash, icmp, i)
 static void
 test_int(void)
 {
-	struct iset s;
+	iset s;
 	size_t i, j;
 	int int_set[1000], tmp;
 

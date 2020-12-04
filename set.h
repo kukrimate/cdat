@@ -24,14 +24,14 @@
  */
 #define SET_GEN(type, hash, cmp, prefix) \
 \
-struct prefix##set { \
+typedef struct { \
 	size_t load; \
 	size_t size; \
 	type   *arr; \
-}; \
+} prefix##set; \
 \
 static inline void \
-prefix##set_init(struct prefix##set *self) \
+prefix##set_init(prefix##set *self) \
 { \
 	self->load = 0; \
 	self->size = SET_PREALLOC; \
@@ -39,13 +39,13 @@ prefix##set_init(struct prefix##set *self) \
 } \
 \
 static inline void \
-prefix##set_free(struct prefix##set *self) \
+prefix##set_free(prefix##set *self) \
 { \
 	free(self->arr); \
 } \
 \
 static inline void \
-prefix##set_set(struct prefix##set *self, type key) \
+prefix##set_set(prefix##set *self, type key) \
 { \
 	size_t i; \
 \
@@ -76,7 +76,7 @@ prefix##set_set(struct prefix##set *self, type key) \
 } \
 \
 static inline _Bool \
-prefix##set_isset(struct prefix##set *self, type key) \
+prefix##set_isset(prefix##set *self, type key) \
 { \
 	size_t i; \
 	for (i = hash(key) % self->size; \

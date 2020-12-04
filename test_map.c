@@ -78,7 +78,7 @@ static struct item items[] = {
 static void test_string()
 {
 	size_t i;
-	struct smap h;
+	smap h;
 
 	printf("Running string map test... ");
 
@@ -114,7 +114,7 @@ static struct item1 items1[] = {
 static void test_int()
 {
 	size_t i;
-	struct imap h;
+	imap h;
 
 	printf("Running integer map test... ");
 

@@ -24,38 +24,38 @@
  */
 #define MAP_GEN(ktype, vtype, khash, kcmp, prefix) \
 \
-struct prefix##elem { \
+typedef struct { \
 	ktype key; \
 	vtype val; \
-}; \
+} prefix##elem; \
 \
-struct prefix##map { \
+typedef struct { \
 	size_t load; \
 	size_t size; \
-	struct prefix##elem *arr; \
-}; \
+	prefix##elem *arr; \
+} prefix##map; \
 \
 static inline void \
-prefix##map_init(struct prefix##map *self) \
+prefix##map_init(prefix##map *self) \
 { \
 	self->load = 0; \
 	self->size = MAP_PREALLOC; \
-	self->arr = calloc(self->size, sizeof(struct prefix##elem)); \
+	self->arr = calloc(self->size, sizeof(*self->arr)); \
 } \
 \
 static inline void \
-prefix##map_free(struct prefix##map *self) \
+prefix##map_free(prefix##map *self) \
 { \
 	free(self->arr); \
 } \
 \
 static inline void \
-prefix##map_put(struct prefix##map *self, ktype key, vtype val) \
+prefix##map_put(prefix##map *self, ktype key, vtype val) \
 { \
 	size_t i; \
 \
 	size_t oldsize; \
-	struct prefix##elem *oldarr; \
+	prefix##elem *oldarr; \
 \
 	for (i = khash(key) % self->size; \
 			self->arr[i].key; \
@@ -71,7 +71,7 @@ prefix##map_put(struct prefix##map *self, ktype key, vtype val) \
 		oldarr = self->arr; \
 \
 		self->size *= MAP_GROW_FACTOR; \
-		self->arr = calloc(self->size, sizeof(struct prefix##elem)); \
+		self->arr = calloc(self->size, sizeof(*self->arr)); \
 \
 		for (i = 0; i < oldsize; ++i) \
 			if (oldarr[i].key) \
@@ -84,7 +84,7 @@ prefix##map_put(struct prefix##map *self, ktype key, vtype val) \
 } \
 \
 static inline vtype \
-prefix##map_get(struct prefix##map *self, ktype key) \
+prefix##map_get(prefix##map *self, ktype key) \
 { \
 	size_t i; \
 	for (i = khash(key) % self->size; \

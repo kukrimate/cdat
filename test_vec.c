@@ -124,7 +124,7 @@ static struct my teststructs[] = {
 
 static void test_myvec()
 {
-	struct my_vec a;
+	my_vec a;
 	size_t i;
 
 	printf("Running struct vector test... ");
@@ -148,7 +148,7 @@ static char *concated = "Test string 1String2\n\raggagagkakjga{{$$strdata$$}}";
 
 static void test_charvec()
 {
-	struct char_vec a;
+	char_vec a;
 	size_t i, j;
 
 	printf("Running character vector test... ");
@@ -173,7 +173,7 @@ static void *ptrs[] = {
 
 static void test_ptrvec()
 {
-	struct pvoid_vec a;
+	pvoid_vec a;
 	size_t i;
 
 	printf("Running pointer vector test... ");
