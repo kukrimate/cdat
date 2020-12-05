@@ -80,7 +80,7 @@ prefix##map_rehash(prefix##map *self) \
 	oldarr = self->arr; \
 \
 	/* Check if removing deleted pairs is enough or do we need to grow */ \
-	if (self->present_cnt - self->deleted_cnt >= MAP_GROW_TRESHOLD(self->size)) \
+	if (self->present_cnt - self->deleted_cnt > MAP_GROW_TRESHOLD(self->size)) \
 		self->size *= MAP_GROW_FACTOR; \
 	/* Set deleted and present count to 0 initially for the new table */ \
 	self->present_cnt = 0; \
@@ -96,10 +96,14 @@ prefix##map_rehash(prefix##map *self) \
 	free(oldarr); \
 } \
 \
-void  \
-prefix##map_put(prefix##map *self, ktype key, vtype val) \
+static inline vtype * \
+prefix##map_ptr(prefix##map *self, ktype key) \
 { \
 	size_t i; \
+	\
+	/* Check if a rehash is needed before inserting a new pair */ \
+	if (self->present_cnt > MAP_REHASH_TRESHOLD(self->size)) \
+		prefix##map_rehash(self); \
 \
 	/* Probe for the key (even if deleted) or an empty bucket */ \
 	for (i = khash(key) % self->size; \
@@ -118,11 +122,13 @@ prefix##map_put(prefix##map *self, ktype key, vtype val) \
 	self->arr[i].present = 1; \
 	self->arr[i].deleted = 0; \
 	self->arr[i].key = key; \
-	self->arr[i].val = val; \
+	return &self->arr[i].val; \
+} \
 \
-	/* Check if we reached the treshold for a rehash */ \
-	if (self->present_cnt >= MAP_REHASH_TRESHOLD(self->size)) \
-		prefix##map_rehash(self); \
+void \
+prefix##map_put(prefix##map *self, ktype key, vtype val)  \
+{ \
+	*prefix##map_ptr(self, key) = val; \
 } \
 \
 static inline void \
