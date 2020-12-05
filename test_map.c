@@ -12,11 +12,8 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
 
-MAP_GEN(char *, char *, djb2_hash, !strcmp, s)
-
-#define ihash(x) x
-#define icmp(x, y) x == y
-MAP_GEN(int, char *, ihash, icmp, i)
+MAP_GEN(char *, char *, djb2_hash, !strcmp, string_)
+MAP_GEN(int, char *, IHASH, ICOMPARE, int_)
 
 struct item {
 	char *k, *v;
@@ -79,25 +76,30 @@ static struct item items[] = {
 
 static void test_string()
 {
+	string_map strmap;
 	size_t i;
-	smap h;
+	char *v;
 
 	printf("Running string map test... ");
 
-	smap_init(&h);
+	string_map_init(&strmap);
 
-	for (i = 0; i < ARRAY_SIZE(items); ++i)
-		smap_put(&h, items[i].k, items[i].v);
-	for (i = 0; i < ARRAY_SIZE(items); ++i)
-		assert(smap_get(&h, items[i].k) == items[i].v);
+	for (i = 0; i < ARRAY_SIZE(items); ++i) {
+		string_map_put(&strmap, items[i].k, items[i].v);
+	}
 
-	smap_free(&h);
+	for (i = 0; i < ARRAY_SIZE(items); ++i) {
+		assert(string_map_get(&strmap, items[i].k, &v));
+		assert(v == items[i].v);
+	}
+
+	string_map_free(&strmap);
 
 	printf("OK\n");
 }
 
 struct item1 {
-	uint16_t k;
+	int k;
 	char *v;
 };
 
@@ -114,32 +116,37 @@ static struct item1 items1[] = {
 };
 
 static struct item1 items1_del[] = {
-	{ .k = 15555, .v = "crap val 1" },
-	{ .k = 145,   .v = "crap val 2" },
-	{ .k = 5676,  .v = "crap val 3" },
-	{ .k = 4356,  .v = "crap val 4" },
+	{ .k = 18, .v = "crap val 1" },
+	{ .k = 6215,   .v = "crap val 2" },
+	{ .k = 4356,  .v = "crap val 3" },
+	{ .k = 145,  .v = "crap val 4" },
 };
 
 static void test_int()
 {
+	int_map intmap;
 	size_t i;
-	imap h;
+	char *v;
 
 	printf("Running integer map test... ");
 
-	imap_init(&h);
+	int_map_init(&intmap);
 
 	for (i = 0; i < ARRAY_SIZE(items1_del); ++i) {
-		imap_put(&h, items1_del[i].k, items1_del[i].v);
-		imap_del(&h, items1_del[i].k);
-		assert(imap_get(&h, items1_del[i].k) == 0);
+		int_map_put(&intmap, items1_del[i].k, items1_del[i].v);
+		int_map_del(&intmap, items1_del[i].k);
 	}
-	for (i = 0; i < ARRAY_SIZE(items1); ++i)
-		imap_put(&h, items1[i].k, items1[i].v);
-	for (i = 0; i < ARRAY_SIZE(items1); ++i)
-		assert(items1[i].v == imap_get(&h, items1[i].k));
+	for (i = 0; i < ARRAY_SIZE(items1_del); ++i)
+		assert(!int_map_get(&intmap, items1_del[i].k, &v));
 
-	imap_free(&h);
+	for (i = 0; i < ARRAY_SIZE(items1); ++i)
+		int_map_put(&intmap, items1[i].k, items1[i].v);
+	for (i = 0; i < ARRAY_SIZE(items1); ++i) {
+		assert(int_map_get(&intmap, items1[i].k, &v));
+		assert(v == items1[i].v);
+	}
+
+	int_map_free(&intmap);
 
 	printf("OK\n");
 }

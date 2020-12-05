@@ -7,17 +7,23 @@
 /*
  * Number of preallocated buckets
  */
+#ifndef MAP_PREALLOC
 #define MAP_PREALLOC 10
+#endif
 
 /*
  * Calculate the max allowed number of filled buckets
  */
+#ifndef MAP_LOAD_LIMIT
 #define MAP_LOAD_LIMIT(n) (n * 3 / 4)
+#endif
 
 /*
  * Factor to grow the bucket count by when the load limit is reached
  */
+#ifndef MAP_GROW_FACTOR
 #define MAP_GROW_FACTOR 2
+#endif
 
 /*
  * Generate type specific definitions
@@ -32,7 +38,8 @@ typedef struct { \
 } prefix##elem; \
 \
 typedef struct { \
-	size_t load; \
+	size_t present_cnt; \
+	size_t deleted_cnt; \
 	size_t size; \
 	prefix##elem *arr; \
 } prefix##map; \
@@ -40,7 +47,8 @@ typedef struct { \
 static inline void \
 prefix##map_init(prefix##map *self) \
 { \
-	self->load = 0; \
+	self->present_cnt = 0; \
+	self->deleted_cnt = 0; \
 	self->size = MAP_PREALLOC; \
 	self->arr = calloc(self->size, sizeof(*self->arr)); \
 } \
@@ -52,64 +60,105 @@ prefix##map_free(prefix##map *self) \
 } \
 \
 static inline void \
+prefix##map_put(prefix##map *self, ktype key, vtype val); \
+\
+static inline void \
+prefix##map_rehash(prefix##map *self) \
+{ \
+	size_t i, oldsize; \
+	prefix##elem *oldarr; \
+\
+	/* Save old bucket array for rehashing */ \
+	oldsize = self->size; \
+	oldarr = self->arr; \
+\
+	/* Check if removing deleted pairs is enough or do we need to grow */ \
+	if (self->present_cnt - self->deleted_cnt >= MAP_LOAD_LIMIT(self->size)) \
+		self->size *= MAP_GROW_FACTOR; \
+	/* Set deleted and present count to 0 initially for the new table */ \
+	self->present_cnt = 0; \
+	self->deleted_cnt = 0; \
+	/* Allocate new bucket array */ \
+	self->arr = calloc(self->size, sizeof(*self->arr)); \
+\
+	/* Put all non-deleted pairs into the new table */ \
+	for (i = 0; i < oldsize; ++i) \
+		if (oldarr[i].present && !oldarr[i].deleted)\
+			prefix##map_put(self, oldarr[i].key, oldarr[i].val); \
+\
+	free(oldarr); \
+} \
+\
+void  \
 prefix##map_put(prefix##map *self, ktype key, vtype val) \
 { \
 	size_t i; \
-	size_t oldsize; \
-	prefix##elem *oldarr; \
 \
-	for (i = khash(key) % self->size; self->arr[i].present; i = (i + 1) % self->size) \
-		if (!self->arr[i].deleted && kcmp(self->arr[i].key, key)) \
+	/* Probe for the key (even if deleted) or an empty bucket */ \
+	for (i = khash(key) % self->size; \
+			self->arr[i].present; i = (i + 1) % self->size) \
+		if (kcmp(self->arr[i].key, key)) \
 			break; \
 \
+	/* Increase load if the key was not present in the table before */ \
+	if (!self->arr[i].present) \
+		++self->present_cnt; \
+	/* Decrease deleted count if re-filling a deleted pair's bucket */ \
+	else if (self->arr[i].deleted) \
+		--self->deleted_cnt; \
+\
+	/* Fill bucket with the pair */ \
 	self->arr[i].present = 1; \
+	self->arr[i].deleted = 0; \
 	self->arr[i].key = key; \
 	self->arr[i].val = val; \
 \
-	if (++self->load >= MAP_LOAD_LIMIT(self->size)) { \
-		oldsize = self->size; \
-		oldarr = self->arr; \
-\
-		self->size *= MAP_GROW_FACTOR; \
-		self->arr = calloc(self->size, sizeof(*self->arr)); \
-\
-		for (i = 0; i < oldsize; ++i) \
-			if (oldarr[i].present) { \
-				if (oldarr[i].deleted) \
-					--self->load; \
-				else \
-					prefix##map_put(self, oldarr[i].key, oldarr[i].val); \
-			} \
-\
-		free(oldarr); \
-	} \
-} \
-\
-static inline vtype \
-prefix##map_get(prefix##map *self, ktype key) \
-{ \
-	size_t i; \
-	for (i = khash(key) % self->size; self->arr[i].present; i = (i + 1) % self->size) \
-		if (!self->arr[i].deleted && kcmp(self->arr[i].key, key)) \
-			return self->arr[i].val; \
-	return (vtype) 0; \
+	/* Check if the table reached the load limit and needs rehashing */ \
+	if (self->present_cnt >= MAP_LOAD_LIMIT(self->size)) \
+		prefix##map_rehash(self); \
 } \
 \
 static inline void \
 prefix##map_del(prefix##map *self, ktype key) \
 { \
 	size_t i; \
-	for (i = khash(key) % self->size; self->arr[i].present; i = (i + 1) % self->size) \
+\
+	for (i = khash(key) % self->size; \
+			self->arr[i].present; i = (i + 1) % self->size) \
 		if (kcmp(self->arr[i].key, key)) { \
+			/* Avoid double counting if the pair was already deleted */ \
+			if (self->arr[i].deleted) \
+				return; \
+			/* Mark pair as deleted if it wasn't already marked */ \
 			self->arr[i].deleted = 1; \
-			break; \
+			++self->deleted_cnt; \
+			return; \
 		} \
+} \
+\
+static inline _Bool \
+prefix##map_get(prefix##map *self, ktype key, vtype *val) \
+{ \
+	size_t i; \
+\
+	for (i = khash(key) % self->size; \
+			self->arr[i].present; i = (i + 1) % self->size) \
+		if (kcmp(self->arr[i].key, key)) { \
+			/* Signal not-present if the pair was deleted */ \
+			if (self->arr[i].deleted) \
+				return 0; \
+			/* Copy value to out pointer and return present */ \
+			*val = self->arr[i].val; \
+			return 1; \
+		} \
+	/* Signal not-present if the key wasn't found */ \
+	return 0; \
 }
 
 /*
  * Hash and compare for scaler values
  */
-#define shash(x)   (x)
-#define scmp(x, y) (x == y)
+#define IHASH(x) (x)
+#define ICOMPARE(x, y) ((x) == (y))
 
 #endif
