@@ -10,6 +10,8 @@
 #include "map.h"
 #include "djb2.h"
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
+
 MAP_GEN(char *, char *, djb2_hash, !strcmp, s)
 
 #define ihash(x) x
@@ -84,9 +86,9 @@ static void test_string()
 
 	smap_init(&h);
 
-	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
+	for (i = 0; i < ARRAY_SIZE(items); ++i)
 		smap_put(&h, items[i].k, items[i].v);
-	for (i = 0; i < sizeof(items) / sizeof(items[0]); ++i)
+	for (i = 0; i < ARRAY_SIZE(items); ++i)
 		assert(smap_get(&h, items[i].k) == items[i].v);
 
 	smap_free(&h);
@@ -111,6 +113,13 @@ static struct item1 items1[] = {
 	{ .k = 54244, .v = "some val 24" },
 };
 
+static struct item1 items1_del[] = {
+	{ .k = 15555, .v = "crap val 1" },
+	{ .k = 145,   .v = "crap val 2" },
+	{ .k = 5676,  .v = "crap val 3" },
+	{ .k = 4356,  .v = "crap val 4" },
+};
+
 static void test_int()
 {
 	size_t i;
@@ -120,9 +129,14 @@ static void test_int()
 
 	imap_init(&h);
 
-	for (i = 0; i < sizeof(items1) / sizeof(items1[0]); ++i)
+	for (i = 0; i < ARRAY_SIZE(items1_del); ++i) {
+		imap_put(&h, items1_del[i].k, items1_del[i].v);
+		imap_del(&h, items1_del[i].k);
+		assert(imap_get(&h, items1_del[i].k) == 0);
+	}
+	for (i = 0; i < ARRAY_SIZE(items1); ++i)
 		imap_put(&h, items1[i].k, items1[i].v);
-	for (i = 0; i < sizeof(items1) / sizeof(items1[0]); ++i)
+	for (i = 0; i < ARRAY_SIZE(items1); ++i)
 		assert(items1[i].v == imap_get(&h, items1[i].k));
 
 	imap_free(&h);

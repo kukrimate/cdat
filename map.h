@@ -25,6 +25,8 @@
 #define MAP_GEN(ktype, vtype, khash, kcmp, prefix) \
 \
 typedef struct { \
+	_Bool present; \
+	_Bool deleted; \
 	ktype key; \
 	vtype val; \
 } prefix##elem; \
@@ -53,16 +55,14 @@ static inline void \
 prefix##map_put(prefix##map *self, ktype key, vtype val) \
 { \
 	size_t i; \
-\
 	size_t oldsize; \
 	prefix##elem *oldarr; \
 \
-	for (i = khash(key) % self->size; \
-			self->arr[i].key; \
-			i = (i + 1) % self->size) \
-		if (kcmp(self->arr[i].key, key)) \
+	for (i = khash(key) % self->size; self->arr[i].present; i = (i + 1) % self->size) \
+		if (!self->arr[i].deleted && kcmp(self->arr[i].key, key)) \
 			break; \
 \
+	self->arr[i].present = 1; \
 	self->arr[i].key = key; \
 	self->arr[i].val = val; \
 \
@@ -74,10 +74,12 @@ prefix##map_put(prefix##map *self, ktype key, vtype val) \
 		self->arr = calloc(self->size, sizeof(*self->arr)); \
 \
 		for (i = 0; i < oldsize; ++i) \
-			if (oldarr[i].key) \
-				prefix##map_put(self, \
-					oldarr[i].key, \
-					oldarr[i].val); \
+			if (oldarr[i].present) { \
+				if (oldarr[i].deleted) \
+					--self->load; \
+				else \
+					prefix##map_put(self, oldarr[i].key, oldarr[i].val); \
+			} \
 \
 		free(oldarr); \
 	} \
@@ -87,12 +89,21 @@ static inline vtype \
 prefix##map_get(prefix##map *self, ktype key) \
 { \
 	size_t i; \
-	for (i = khash(key) % self->size; \
-			self->arr[i].key; \
-			i = (i + 1) % self->size) \
-		if (kcmp(self->arr[i].key, key)) \
+	for (i = khash(key) % self->size; self->arr[i].present; i = (i + 1) % self->size) \
+		if (!self->arr[i].deleted && kcmp(self->arr[i].key, key)) \
 			return self->arr[i].val; \
 	return (vtype) 0; \
+} \
+\
+static inline void \
+prefix##map_del(prefix##map *self, ktype key) \
+{ \
+	size_t i; \
+	for (i = khash(key) % self->size; self->arr[i].present; i = (i + 1) % self->size) \
+		if (kcmp(self->arr[i].key, key)) { \
+			self->arr[i].deleted = 1; \
+			break; \
+		} \
 }
 
 /*
