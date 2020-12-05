@@ -12,14 +12,21 @@
 #endif
 
 /*
- * Calculate the max allowed number of filled buckets
+ * Rehash the table if the load is over this number
  */
-#ifndef MAP_LOAD_LIMIT
-#define MAP_LOAD_LIMIT(n) (n * 3 / 4)
+#ifndef MAP_REHASH_TRESHOLD
+#define MAP_REHASH_TRESHOLD(size) (size * 3 / 4)
 #endif
 
 /*
- * Factor to grow the bucket count by when the load limit is reached
+ * Grow the table if the load would be over this number after a rehash
+ */
+#ifndef MAP_GROW_TRESHOLD
+#define MAP_GROW_TRESHOLD(size) (size / 2)
+#endif
+
+/*
+ * Multiplier for the size when a grow is triggered
  */
 #ifndef MAP_GROW_FACTOR
 #define MAP_GROW_FACTOR 2
@@ -73,7 +80,7 @@ prefix##map_rehash(prefix##map *self) \
 	oldarr = self->arr; \
 \
 	/* Check if removing deleted pairs is enough or do we need to grow */ \
-	if (self->present_cnt - self->deleted_cnt >= MAP_LOAD_LIMIT(self->size)) \
+	if (self->present_cnt - self->deleted_cnt >= MAP_GROW_TRESHOLD(self->size)) \
 		self->size *= MAP_GROW_FACTOR; \
 	/* Set deleted and present count to 0 initially for the new table */ \
 	self->present_cnt = 0; \
@@ -113,8 +120,8 @@ prefix##map_put(prefix##map *self, ktype key, vtype val) \
 	self->arr[i].key = key; \
 	self->arr[i].val = val; \
 \
-	/* Check if the table reached the load limit and needs rehashing */ \
-	if (self->present_cnt >= MAP_LOAD_LIMIT(self->size)) \
+	/* Check if we reached the treshold for a rehash */ \
+	if (self->present_cnt >= MAP_REHASH_TRESHOLD(self->size)) \
 		prefix##map_rehash(self); \
 } \
 \
