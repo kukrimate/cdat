@@ -97,7 +97,7 @@ prefix##map_rehash(prefix##map *self) \
 } \
 \
 static inline vtype * \
-prefix##map_ptr(prefix##map *self, ktype key) \
+prefix##map_putptr(prefix##map *self, ktype key) \
 { \
 	size_t i; \
 	\
@@ -128,7 +128,7 @@ prefix##map_ptr(prefix##map *self, ktype key) \
 void \
 prefix##map_put(prefix##map *self, ktype key, vtype val)  \
 { \
-	*prefix##map_ptr(self, key) = val; \
+	*prefix##map_putptr(self, key) = val; \
 } \
 \
 static inline void \
@@ -149,8 +149,8 @@ prefix##map_del(prefix##map *self, ktype key) \
 		} \
 } \
 \
-static inline _Bool \
-prefix##map_get(prefix##map *self, ktype key, vtype *val) \
+static inline vtype * \
+prefix##map_getptr(prefix##map *self, ktype key) \
 { \
 	size_t i; \
 \
@@ -159,12 +159,22 @@ prefix##map_get(prefix##map *self, ktype key, vtype *val) \
 		if (kcmp(self->arr[i].key, key)) { \
 			/* Signal not-present if the pair was deleted */ \
 			if (self->arr[i].deleted) \
-				return 0; \
-			/* Copy value to out pointer and return present */ \
-			*val = self->arr[i].val; \
-			return 1; \
+				return NULL; \
+			/* Return pointer to value */ \
+			return &self->arr[i].val; \
 		} \
-	/* Signal not-present if the key wasn't found */ \
+	/* Signal not-present if key was found */ \
+	return NULL; \
+} \
+\
+static inline _Bool \
+prefix##map_get(prefix##map *self, ktype key, vtype *val) \
+{ \
+	vtype *ptr = prefix##map_getptr(self, key); \
+	if (ptr) { \
+		*val = *ptr; \
+		return 1; \
+	} \
 	return 0; \
 }
 
