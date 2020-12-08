@@ -16,38 +16,48 @@ SET_GEN(const char *, djb2_hash, !strcmp, s)
 
 /* List of string to add to the set */
 static const char *str_set[] = {
-	"XypOofUdRxRcCBQKZCQlEyxPU"
-	"gUNnSLlgEQyUiYHUHjpJgUumU"
-	"nJAcZSTiWyuCkdKfMfSfeLCpY"
-	"yVxjeUvybfNwsUowvsDmuVvHB"
-	"SnLSmHGrOknVOXvAWDpeGukVe"
-	"idrTWjuItFeVHBmAQNhNYZEYY"
-	"qXKSexXMQzuarYeCsYJyHzAXe"
-	"EdHkoHeUIIqrXzLojbaQPjhXr"
-	"tkKufRlvrnRXBYjCeKbQYVmDy"
-	"kewgcXsvcpjVZnUhGRIqgrXSR"
-	"kaJPaedhodvYspLQplJvbzGPf"
-	"kzPtCTMWafRCFYLjFDUbWrWgD"
-	"ZjGYnxbTHQoTYCzlsHowVCuSh"
-	"tCKYZvgVzewLNIqHUJtaZShzg"
-	"FiYrvEhPCIHsSpKUiTiapXXPP"
-	"oqSvIbdtGrPGmUFUiTdyTWSNW"
-	"ZRSiRHdhAyxHAwntIsRDJnRPJ"
-	"MxkxtzuKsTLLqrLZFeYrcIPIV"
-	"OmOisiLrgagkpHExeGvUBHrcZ"
-	"PIkkIndLNqpxFjxquVilMMhuv"
+	"XypOofUdRxRcCBQKZCQlEyxPU",
+	"gUNnSLlgEQyUiYHUHjpJgUumU",
+	"nJAcZSTiWyuCkdKfMfSfeLCpY",
+	"yVxjeUvybfNwsUowvsDmuVvHB",
+	"SnLSmHGrOknVOXvAWDpeGukVe",
+	"idrTWjuItFeVHBmAQNhNYZEYY",
+	"qXKSexXMQzuarYeCsYJyHzAXe",
+	"EdHkoHeUIIqrXzLojbaQPjhXr",
+	"tkKufRlvrnRXBYjCeKbQYVmDy",
+	"kewgcXsvcpjVZnUhGRIqgrXSR",
+	"kaJPaedhodvYspLQplJvbzGPf",
+	"kzPtCTMWafRCFYLjFDUbWrWgD",
+	"ZjGYnxbTHQoTYCzlsHowVCuSh",
+	"tCKYZvgVzewLNIqHUJtaZShzg",
+	"FiYrvEhPCIHsSpKUiTiapXXPP",
+	"oqSvIbdtGrPGmUFUiTdyTWSNW",
+	"ZRSiRHdhAyxHAwntIsRDJnRPJ",
+	"MxkxtzuKsTLLqrLZFeYrcIPIV",
+	"OmOisiLrgagkpHExeGvUBHrcZ",
+	"PIkkIndLNqpxFjxquVilMMhuv",
 };
 
 /* List of string to test for invalid strings with */
 static const char *str_notset[] = {
-	"hmFzmZKaxCizALA"
-	"tWWoceEzznOFFoU"
-	"RiPYMKWctTxSONp"
-	"WwsIuvuasFQJOVr"
-	"ZEMnaiKFmPXGzLv"
-	"hZcDMikkCAjqNER"
-	"oGhUeEjHcDTWFzX"
-	"HfDQpbENCGoFxpt"
+	"hmFzmZKaxCizALA",
+	"tWWoceEzznOFFoU",
+	"RiPYMKWctTxSONp",
+	"WwsIuvuasFQJOVr",
+	"ZEMnaiKFmPXGzLv",
+	"hZcDMikkCAjqNER",
+	"oGhUeEjHcDTWFzX",
+	"HfDQpbENCGoFxpt",
+	"sFkPNcDnmZk2EP5",
+	"K8MUVt2cvfpZ7Cv",
+	"Be41gHuYOd6mFrJ",
+	"xjelYxKGMZRYIz8",
+	"UhwruA4TwxiegxD",
+	"TTFKu2mseBEuwBa",
+	"g8lwNqiOYTHj9Se",
+	"3GQ3ph8fBzUziUq",
+	"BOq3kMj3RhLXGpz",
+	"xUWm2yF1tmdlORO",
 };
 
 static void
@@ -64,6 +74,12 @@ test_str(void)
 		assert(!sset_isset(&s, str_notset[i]));
 	for (i = 0; i < ARRAY_SIZE(str_set); ++i)
 		assert(sset_isset(&s, str_set[i]));
+
+	for (i = 0; i < ARRAY_SIZE(str_set); ++i)
+		sset_unset(&s, str_set[i]);
+	for (i = 0; i < ARRAY_SIZE(str_notset); ++i)
+		sset_set(&s, str_notset[i]);
+
 	sset_free(&s);
 	printf("OK\n");
 }
@@ -92,6 +108,8 @@ retry:
 		for (j = 0; j < ARRAY_SIZE(int_set); ++j)
 			if (int_set[j] == tmp)
 				goto retry;
+		iset_set(&s, tmp);
+		iset_unset(&s, tmp);
 		assert(!iset_isset(&s, tmp));
 	}
 	for (i = 0; i < ARRAY_SIZE(int_set); ++i)
