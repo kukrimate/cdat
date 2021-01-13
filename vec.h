@@ -54,6 +54,15 @@ prefix##vec_add(prefix##vec *self, type m) \
 	self->arr[self->n - 1] = m; \
 } \
 \
+static inline void \
+prefix##vec_addall(prefix##vec *self, type *m, size_t n) \
+{ \
+	self->n += n; \
+	if (self->n > self->size) \
+		prefix##vec_reserve(self, self->n * VEC_GROW_FACTOR); \
+	memcpy(self->arr + self->n - n, m, n * sizeof(type)); \
+} \
+\
 static inline type * \
 prefix##vec_push(prefix##vec *self) \
 { \
