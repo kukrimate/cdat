@@ -121,7 +121,7 @@ static inline vtype *MAP##alias##_putptr(MAP##alias *self, ktype key) \
 	return &self->arr[i].val; \
 } \
 \
-void MAP##alias##_put(MAP##alias *self, ktype key, vtype val)  \
+static inline void MAP##alias##_put(MAP##alias *self, ktype key, vtype val)  \
 { \
 	*MAP##alias##_putptr(self, key) = val; \
 } \
