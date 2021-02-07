@@ -65,7 +65,7 @@ static inline void MAP##alias##_free(MAP##alias *self) \
 	free(self->arr); \
 } \
 \
-static inline void MAP##alias##_put(MAP##alias *self, ktype key, vtype val); \
+static inline vtype *MAP##alias##_put(MAP##alias *self, ktype key); \
 \
 static inline void MAP##alias##_rehash(MAP##alias *self) \
 { \
@@ -88,12 +88,12 @@ static inline void MAP##alias##_rehash(MAP##alias *self) \
 	/* Put all non-deleted pairs into the new table */ \
 	for (i = 0; i < oldsize; ++i) \
 		if (oldarr[i].present && !oldarr[i].deleted)\
-			MAP##alias##_put(self, oldarr[i].key, oldarr[i].val); \
+			*MAP##alias##_put(self, oldarr[i].key) = oldarr[i].val; \
 \
 	free(oldarr); \
 } \
 \
-static inline vtype *MAP##alias##_putptr(MAP##alias *self, ktype key) \
+static inline vtype *MAP##alias##_put(MAP##alias *self, ktype key) \
 { \
 	size_t i; \
 	\
@@ -121,9 +121,21 @@ static inline vtype *MAP##alias##_putptr(MAP##alias *self, ktype key) \
 	return &self->arr[i].val; \
 } \
 \
-static inline void MAP##alias##_put(MAP##alias *self, ktype key, vtype val)  \
+static inline vtype *MAP##alias##_get(MAP##alias *self, ktype key) \
 { \
-	*MAP##alias##_putptr(self, key) = val; \
+	size_t i; \
+\
+	for (i = khash(key) % self->size; \
+			self->arr[i].present; i = (i + 1) % self->size) \
+		if (kcmp(self->arr[i].key, key)) { \
+			/* Signal not-present if the pair was deleted */ \
+			if (self->arr[i].deleted) \
+				return NULL; \
+			/* Return pointer to value */ \
+			return &self->arr[i].val; \
+		} \
+	/* Signal not-present if key was found */ \
+	return NULL; \
 } \
 \
 static inline void MAP##alias##_del(MAP##alias *self, ktype key) \
@@ -141,34 +153,8 @@ static inline void MAP##alias##_del(MAP##alias *self, ktype key) \
 			++self->deleted_cnt; \
 			return; \
 		} \
-} \
-\
-static inline vtype *MAP##alias##_getptr(MAP##alias *self, ktype key) \
-{ \
-	size_t i; \
-\
-	for (i = khash(key) % self->size; \
-			self->arr[i].present; i = (i + 1) % self->size) \
-		if (kcmp(self->arr[i].key, key)) { \
-			/* Signal not-present if the pair was deleted */ \
-			if (self->arr[i].deleted) \
-				return NULL; \
-			/* Return pointer to value */ \
-			return &self->arr[i].val; \
-		} \
-	/* Signal not-present if key was found */ \
-	return NULL; \
-} \
-\
-static inline _Bool MAP##alias##_get(MAP##alias *self, ktype key, vtype *val) \
-{ \
-	vtype *ptr = MAP##alias##_getptr(self, key); \
-	if (ptr) { \
-		*val = *ptr; \
-		return 1; \
-	} \
-	return 0; \
 }
+
 
 /*
  * Hash and compare for scaler values

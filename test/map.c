@@ -78,20 +78,16 @@ static void test_string()
 {
 	MAPstr strmap;
 	size_t i;
-	char *v;
 
 	printf("Running string map test... ");
 
 	MAPstr_init(&strmap);
 
-	for (i = 0; i < ARRAY_SIZE(items); ++i) {
-		MAPstr_put(&strmap, items[i].k, items[i].v);
-	}
+	for (i = 0; i < ARRAY_SIZE(items); ++i)
+		*MAPstr_put(&strmap, items[i].k) = items[i].v;
 
-	for (i = 0; i < ARRAY_SIZE(items); ++i) {
-		assert(MAPstr_get(&strmap, items[i].k, &v));
-		assert(v == items[i].v);
-	}
+	for (i = 0; i < ARRAY_SIZE(items); ++i)
+		assert(*MAPstr_get(&strmap, items[i].k) == items[i].v);
 
 	MAPstr_free(&strmap);
 
@@ -126,25 +122,22 @@ static void test_int()
 {
 	MAPint intmap;
 	size_t i;
-	char *v;
 
 	printf("Running integer map test... ");
 
 	MAPint_init(&intmap);
 
 	for (i = 0; i < ARRAY_SIZE(items1_del); ++i) {
-		MAPint_put(&intmap, items1_del[i].k, items1_del[i].v);
+		*MAPint_put(&intmap, items1_del[i].k) = items1_del[i].v;
 		MAPint_del(&intmap, items1_del[i].k);
 	}
 	for (i = 0; i < ARRAY_SIZE(items1_del); ++i)
-		assert(!MAPint_get(&intmap, items1_del[i].k, &v));
+		assert(!MAPint_get(&intmap, items1_del[i].k));
 
 	for (i = 0; i < ARRAY_SIZE(items1); ++i)
-		MAPint_put(&intmap, items1[i].k, items1[i].v);
-	for (i = 0; i < ARRAY_SIZE(items1); ++i) {
-		assert(MAPint_get(&intmap, items1[i].k, &v));
-		assert(v == items1[i].v);
-	}
+		*MAPint_put(&intmap, items1[i].k) = items1[i].v;
+	for (i = 0; i < ARRAY_SIZE(items1); ++i)
+		assert(*MAPint_get(&intmap, items1[i].k) == items1[i].v);
 
 	MAPint_free(&intmap);
 
