@@ -1,6 +1,7 @@
 /*
  * Vector, aka dynamically growing array
  */
+
 #ifndef VEC_H
 #define VEC_H
 
@@ -17,57 +18,51 @@
 /*
  * Generate type specific definitions
  */
-#define VEC_GEN(type, prefix) \
+#define VEC_GEN(type, alias) \
 \
 typedef struct { \
 	size_t n;    /* Number of elements */ \
 	size_t size; /* Size of the arr */ \
 	type   *arr; /* The backing arr */ \
-} prefix##vec; \
+} VEC##alias; \
 \
-static inline void \
-prefix##vec_init(prefix##vec *self) \
+static inline void VEC##alias##_init(VEC##alias *self) \
 { \
 	self->n = 0; \
 	self->size = VEC_PREALLOC; \
 	self->arr = reallocarray(NULL, self->size, sizeof(type)); \
 } \
 \
-static inline void \
-prefix##vec_free(prefix##vec *self) \
+static inline void VEC##alias##_free(VEC##alias *self) \
 { \
 	free(self->arr); \
 } \
 \
-static inline void \
-prefix##vec_reserve(prefix##vec *self, size_t size) \
+static inline void VEC##alias##_reserve(VEC##alias *self, size_t size) \
 { \
 	self->size = size; \
 	self->arr = reallocarray(self->arr, self->size, sizeof(type)); \
 } \
 \
-static inline void \
-prefix##vec_add(prefix##vec *self, type m) \
+static inline void VEC##alias##_add(VEC##alias *self, type m) \
 { \
 	if (++self->n > self->size) \
-		prefix##vec_reserve(self, self->n * VEC_GROW_FACTOR); \
+		VEC##alias##_reserve(self, self->n * VEC_GROW_FACTOR); \
 	self->arr[self->n - 1] = m; \
 } \
 \
-static inline void \
-prefix##vec_addall(prefix##vec *self, type *m, size_t n) \
+static inline void VEC##alias##_addall(VEC##alias *self, type *m, size_t n) \
 { \
 	self->n += n; \
 	if (self->n > self->size) \
-		prefix##vec_reserve(self, self->n * VEC_GROW_FACTOR); \
+		VEC##alias##_reserve(self, self->n * VEC_GROW_FACTOR); \
 	memcpy(self->arr + self->n - n, m, n * sizeof(type)); \
 } \
 \
-static inline type * \
-prefix##vec_push(prefix##vec *self) \
+static inline type *VEC##alias##_push(VEC##alias *self) \
 { \
 	if (++self->n > self->size) \
-		prefix##vec_reserve(self, self->n * VEC_GROW_FACTOR); \
+		VEC##alias##_reserve(self, self->n * VEC_GROW_FACTOR); \
 	return self->arr + self->n - 1; \
 }
 

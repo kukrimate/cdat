@@ -6,17 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "vec.h"
+#include <vec.h>
 
-VEC_GEN(char, char_)
-VEC_GEN(void *, pvoid_)
+VEC_GEN(char, char)
+VEC_GEN(void *, pvoid)
 
 struct my {
 	short a, b;
 	int   c, d;
 };
 
-VEC_GEN(struct my, my_)
+VEC_GEN(struct my, my)
 
 static struct my teststructs[] = {
 	{ .a = 0, .b = 0, .c = 0, .d = 0 },
@@ -124,18 +124,18 @@ static struct my teststructs[] = {
 
 static void test_myvec()
 {
-	my_vec a;
+	VECmy a;
 	size_t i;
 
 	printf("Running struct vector test... ");
 
-	my_vec_init(&a);
+	VECmy_init(&a);
 
 	for (i = 0; i < sizeof(teststructs) / sizeof(struct my); ++i)
-		my_vec_add(&a, teststructs[i]);
+		VECmy_add(&a, teststructs[i]);
 	assert(!memcmp(a.arr, teststructs, sizeof(teststructs)));
 
-	my_vec_free(&a);
+	VECmy_free(&a);
 	printf("OK\n");
 }
 
@@ -148,18 +148,18 @@ static char *concated = "Test string 1String2\n\raggagagkakjga{{$$strdata$$}}";
 
 static void test_charvec()
 {
-	char_vec a;
+	VECchar a;
 	size_t i, j;
 
 	printf("Running character vector test... ");
 
-	char_vec_init(&a);
+	VECchar_init(&a);
 	for (i = 0; i < sizeof(strings) / sizeof(char *); ++i)
 		for (j = 0; j < strlen(strings[i]); ++j)
-			char_vec_add(&a, strings[i][j]);
+			VECchar_add(&a, strings[i][j]);
 	assert(!strncmp(concated, a.arr, a.n));
 
-	char_vec_free(&a);
+	VECchar_free(&a);
 
 	printf("OK\n");
 }
@@ -173,17 +173,17 @@ static void *ptrs[] = {
 
 static void test_ptrvec()
 {
-	pvoid_vec a;
+	VECpvoid a;
 	size_t i;
 
 	printf("Running pointer vector test... ");
 
-	pvoid_vec_init(&a);
+	VECpvoid_init(&a);
 	for (i = 0; i < sizeof(ptrs) / sizeof(void *); ++i)
-		pvoid_vec_add(&a, ptrs[i]);
+		VECpvoid_add(&a, ptrs[i]);
 	assert(!memcmp(ptrs, a.arr, sizeof(ptrs)));
 
-	pvoid_vec_free(&a);
+	VECpvoid_free(&a);
 
 	printf("OK\n");
 }

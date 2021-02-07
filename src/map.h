@@ -1,6 +1,7 @@
 /*
  * Unordered map
  */
+
 #ifndef MAP_H
 #define MAP_H
 
@@ -35,24 +36,23 @@
 /*
  * Generate type specific definitions
  */
-#define MAP_GEN(ktype, vtype, khash, kcmp, prefix) \
+#define MAP_GEN(ktype, vtype, khash, kcmp, alias) \
 \
 typedef struct { \
 	_Bool present; \
 	_Bool deleted; \
 	ktype key; \
 	vtype val; \
-} prefix##elem; \
+} MAP_ELEM##alias; \
 \
 typedef struct { \
 	size_t present_cnt; \
 	size_t deleted_cnt; \
 	size_t size; \
-	prefix##elem *arr; \
-} prefix##map; \
+	MAP_ELEM##alias *arr; \
+} MAP##alias; \
 \
-static inline void \
-prefix##map_init(prefix##map *self) \
+static inline void MAP##alias##_init(MAP##alias *self) \
 { \
 	self->present_cnt = 0; \
 	self->deleted_cnt = 0; \
@@ -60,20 +60,17 @@ prefix##map_init(prefix##map *self) \
 	self->arr = calloc(self->size, sizeof(*self->arr)); \
 } \
 \
-static inline void \
-prefix##map_free(prefix##map *self) \
+static inline void MAP##alias##_free(MAP##alias *self) \
 { \
 	free(self->arr); \
 } \
 \
-static inline void \
-prefix##map_put(prefix##map *self, ktype key, vtype val); \
+static inline void MAP##alias##_put(MAP##alias *self, ktype key, vtype val); \
 \
-static inline void \
-prefix##map_rehash(prefix##map *self) \
+static inline void MAP##alias##_rehash(MAP##alias *self) \
 { \
 	size_t i, oldsize; \
-	prefix##elem *oldarr; \
+	MAP_ELEM##alias *oldarr; \
 \
 	/* Save old bucket array for rehashing */ \
 	oldsize = self->size; \
@@ -91,19 +88,18 @@ prefix##map_rehash(prefix##map *self) \
 	/* Put all non-deleted pairs into the new table */ \
 	for (i = 0; i < oldsize; ++i) \
 		if (oldarr[i].present && !oldarr[i].deleted)\
-			prefix##map_put(self, oldarr[i].key, oldarr[i].val); \
+			MAP##alias##_put(self, oldarr[i].key, oldarr[i].val); \
 \
 	free(oldarr); \
 } \
 \
-static inline vtype * \
-prefix##map_putptr(prefix##map *self, ktype key) \
+static inline vtype *MAP##alias##_putptr(MAP##alias *self, ktype key) \
 { \
 	size_t i; \
 	\
 	/* Check if a rehash is needed before inserting a new pair */ \
 	if (self->present_cnt > MAP_REHASH_TRESHOLD(self->size)) \
-		prefix##map_rehash(self); \
+		MAP##alias##_rehash(self); \
 \
 	/* Probe for the key (even if deleted) or an empty bucket */ \
 	for (i = khash(key) % self->size; \
@@ -125,14 +121,12 @@ prefix##map_putptr(prefix##map *self, ktype key) \
 	return &self->arr[i].val; \
 } \
 \
-void \
-prefix##map_put(prefix##map *self, ktype key, vtype val)  \
+void MAP##alias##_put(MAP##alias *self, ktype key, vtype val)  \
 { \
-	*prefix##map_putptr(self, key) = val; \
+	*MAP##alias##_putptr(self, key) = val; \
 } \
 \
-static inline void \
-prefix##map_del(prefix##map *self, ktype key) \
+static inline void MAP##alias##_del(MAP##alias *self, ktype key) \
 { \
 	size_t i; \
 \
@@ -149,8 +143,7 @@ prefix##map_del(prefix##map *self, ktype key) \
 		} \
 } \
 \
-static inline vtype * \
-prefix##map_getptr(prefix##map *self, ktype key) \
+static inline vtype *MAP##alias##_getptr(MAP##alias *self, ktype key) \
 { \
 	size_t i; \
 \
@@ -167,10 +160,9 @@ prefix##map_getptr(prefix##map *self, ktype key) \
 	return NULL; \
 } \
 \
-static inline _Bool \
-prefix##map_get(prefix##map *self, ktype key, vtype *val) \
+static inline _Bool MAP##alias##_get(MAP##alias *self, ktype key, vtype *val) \
 { \
-	vtype *ptr = prefix##map_getptr(self, key); \
+	vtype *ptr = MAP##alias##_getptr(self, key); \
 	if (ptr) { \
 		*val = *ptr; \
 		return 1; \

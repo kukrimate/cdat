@@ -7,13 +7,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include "map.h"
-#include "djb2.h"
+#include <map.h>
+#include <djb2.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
 
-MAP_GEN(char *, char *, djb2_hash, !strcmp, string_)
-MAP_GEN(int, char *, IHASH, ICOMPARE, int_)
+MAP_GEN(char *, char *, djb2_hash, !strcmp, str)
+MAP_GEN(int, char *, IHASH, ICOMPARE, int)
 
 struct item {
 	char *k, *v;
@@ -76,24 +76,24 @@ static struct item items[] = {
 
 static void test_string()
 {
-	string_map strmap;
+	MAPstr strmap;
 	size_t i;
 	char *v;
 
 	printf("Running string map test... ");
 
-	string_map_init(&strmap);
+	MAPstr_init(&strmap);
 
 	for (i = 0; i < ARRAY_SIZE(items); ++i) {
-		string_map_put(&strmap, items[i].k, items[i].v);
+		MAPstr_put(&strmap, items[i].k, items[i].v);
 	}
 
 	for (i = 0; i < ARRAY_SIZE(items); ++i) {
-		assert(string_map_get(&strmap, items[i].k, &v));
+		assert(MAPstr_get(&strmap, items[i].k, &v));
 		assert(v == items[i].v);
 	}
 
-	string_map_free(&strmap);
+	MAPstr_free(&strmap);
 
 	printf("OK\n");
 }
@@ -124,29 +124,29 @@ static struct item1 items1_del[] = {
 
 static void test_int()
 {
-	int_map intmap;
+	MAPint intmap;
 	size_t i;
 	char *v;
 
 	printf("Running integer map test... ");
 
-	int_map_init(&intmap);
+	MAPint_init(&intmap);
 
 	for (i = 0; i < ARRAY_SIZE(items1_del); ++i) {
-		int_map_put(&intmap, items1_del[i].k, items1_del[i].v);
-		int_map_del(&intmap, items1_del[i].k);
+		MAPint_put(&intmap, items1_del[i].k, items1_del[i].v);
+		MAPint_del(&intmap, items1_del[i].k);
 	}
 	for (i = 0; i < ARRAY_SIZE(items1_del); ++i)
-		assert(!int_map_get(&intmap, items1_del[i].k, &v));
+		assert(!MAPint_get(&intmap, items1_del[i].k, &v));
 
 	for (i = 0; i < ARRAY_SIZE(items1); ++i)
-		int_map_put(&intmap, items1[i].k, items1[i].v);
+		MAPint_put(&intmap, items1[i].k, items1[i].v);
 	for (i = 0; i < ARRAY_SIZE(items1); ++i) {
-		assert(int_map_get(&intmap, items1[i].k, &v));
+		assert(MAPint_get(&intmap, items1[i].k, &v));
 		assert(v == items1[i].v);
 	}
 
-	int_map_free(&intmap);
+	MAPint_free(&intmap);
 
 	printf("OK\n");
 }

@@ -1,2 +1,4 @@
+# Object files
 *.o
+# Test binaries
 test_*

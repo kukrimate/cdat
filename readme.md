@@ -1,8 +1,8 @@
 # libkm
-Dumping ground for shared code between my C projects.
-
-## templates
-Templated implementation of common data structures.
+Template library for C to facilitate higher level programming.
+Please note that this library's primary purpose is to suit the author's
+personal projects, as such documentation is non-existent and the API stability
+is a non-goal.
 
 <table border="1">
 	<tr>
@@ -24,5 +24,10 @@ Templated implementation of common data structures.
 		<td>set</td>
 		<td>Unordered set, using a value-less hash table</td>
 		<td>std::unordered_set</td>
+	</tr>
+	<tr>
+		<td>pq</td>
+		<td>Priority queue, using an array-based, implicit binary heap</td>
+		<td>std::priority_queue</td>
 	</tr>
 </table>

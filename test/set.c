@@ -7,12 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "set.h"
-#include "djb2.h"
+#include <set.h>
+#include <djb2.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
 
-SET_GEN(const char *, djb2_hash, !strcmp, s)
+SET_GEN(const char *, djb2_hash, !strcmp, str)
 
 /* List of string to add to the set */
 static const char *str_set[] = {
@@ -63,44 +63,44 @@ static const char *str_notset[] = {
 static void
 test_str(void)
 {
-	sset s;
+	SETstr s;
 	size_t i;
 
 	printf("Running string set test... ");
-	sset_init(&s);
+	SETstr_init(&s);
 	for (i = 0; i < ARRAY_SIZE(str_set); ++i)
-		sset_set(&s, str_set[i]);
+		SETstr_set(&s, str_set[i]);
 	for (i = 0; i < ARRAY_SIZE(str_notset); ++i)
-		assert(!sset_isset(&s, str_notset[i]));
+		assert(!SETstr_isset(&s, str_notset[i]));
 	for (i = 0; i < ARRAY_SIZE(str_set); ++i)
-		assert(sset_isset(&s, str_set[i]));
+		assert(SETstr_isset(&s, str_set[i]));
 
 	for (i = 0; i < ARRAY_SIZE(str_set); ++i)
-		sset_unset(&s, str_set[i]);
+		SETstr_unset(&s, str_set[i]);
 	for (i = 0; i < ARRAY_SIZE(str_notset); ++i)
-		sset_set(&s, str_notset[i]);
+		SETstr_set(&s, str_notset[i]);
 
-	sset_free(&s);
+	SETstr_free(&s);
 	printf("OK\n");
 }
 
 #define ihash(x) x
 #define icmp(x, y) x == y
-SET_GEN(int, ihash, icmp, i)
+SET_GEN(int, ihash, icmp, int)
 
 static void
 test_int(void)
 {
-	iset s;
+	SETint s;
 	size_t i, j;
 	int int_set[1000], tmp;
 
 	printf("Running integer set test... ");
-	iset_init(&s);
+	SETint_init(&s);
 	srand(time(NULL)); /* Make sure we get different ints each time */
 	for (i = 0; i < ARRAY_SIZE(int_set); ++i) {
 		int_set[i] = rand();
-		iset_set(&s, int_set[i]);
+		SETint_set(&s, int_set[i]);
 	}
 	for (i = 0; i < ARRAY_SIZE(int_set) / 2; ++i) {
 retry:
@@ -108,13 +108,13 @@ retry:
 		for (j = 0; j < ARRAY_SIZE(int_set); ++j)
 			if (int_set[j] == tmp)
 				goto retry;
-		iset_set(&s, tmp);
-		iset_unset(&s, tmp);
-		assert(!iset_isset(&s, tmp));
+		SETint_set(&s, tmp);
+		SETint_unset(&s, tmp);
+		assert(!SETint_isset(&s, tmp));
 	}
 	for (i = 0; i < ARRAY_SIZE(int_set); ++i)
-		assert(iset_isset(&s, int_set[i]));
-	iset_free(&s);
+		assert(SETint_isset(&s, int_set[i]));
+	SETint_free(&s);
 	printf("OK\n");
 }
 

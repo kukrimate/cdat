@@ -1,11 +1,11 @@
 /*
  * Daniel Bernstein's hash function
  */
+
 #ifndef DJB2_H
 #define DJB2_H
 
-static inline unsigned int
-djb2_hash(const char *str)
+static inline unsigned int djb2_hash(const char *str)
 {
 	unsigned int r;
 

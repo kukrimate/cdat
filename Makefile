@@ -2,26 +2,31 @@
 # Makefile to build libkm tests
 ##
 
-CFLAGS := -std=c99 -Wall -Wextra -Wpedantic -D_GNU_SOURCE -g
+# Everything must work under strict C99 with all warning
+CFLAGS := -Isrc \
+		  -std=c99 -Wall -Wextra -Wpedantic \
+		  -D_GNU_SOURCE -O1 -g
 
-all: test_vec test_map test_set
+# Test binaries to build
+TESTS := test_vec test_map test_set test_pq
 
-test_vec: test_vec.o
-	$(CC) $(LDFLAGS) -o $@ $^
+# Build all tests by default
+.PHONY: all
+all: $(TESTS)
 
-test_map: test_map.o
-	$(CC) $(LDFLAGS) -o $@ $^
-
-test_set: test_set.o
+test_%: test/%.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
-test: test_vec test_map test_set
-	valgrind ./test_vec
-	valgrind ./test_map
-	valgrind ./test_set
+# Run all tests
+.PHONY: test
+test: $(TESTS)
+	for TEST in $(TESTS); do \
+		valgrind ./$$TEST; \
+	done
 
+.PHONY: clean
 clean:
-	rm -f *.o test_vec test_map test_set
+	rm -f $(TESTS)

@@ -1,6 +1,7 @@
 /*
  * Unordered set
  */
+
 #ifndef SET_H
 #define SET_H
 
@@ -35,23 +36,22 @@
 /*
  * Generate type specific definitions
  */
-#define SET_GEN(type, hash, cmp, prefix) \
+#define SET_GEN(type, hash, cmp, alias) \
 \
 typedef struct { \
 	_Bool present; \
 	_Bool deleted; \
 	type key; \
-} prefix##set_elem; \
+} SET_ELEM##alias; \
 \
 typedef struct { \
 	size_t present_cnt; \
 	size_t deleted_cnt; \
 	size_t size; \
-	prefix##set_elem *arr; \
-} prefix##set; \
+	SET_ELEM##alias *arr; \
+} SET##alias; \
 \
-static inline void \
-prefix##set_init(prefix##set *self) \
+static inline void SET##alias##_init(SET##alias *self) \
 { \
 	self->present_cnt = 0; \
 	self->deleted_cnt = 0; \
@@ -59,17 +59,15 @@ prefix##set_init(prefix##set *self) \
 	self->arr = calloc(self->size, sizeof(*self->arr)); \
 } \
 \
-static inline void \
-prefix##set_free(prefix##set *self) \
+static inline void SET##alias##_free(SET##alias *self) \
 { \
 	free(self->arr); \
 } \
 \
-static inline void \
-prefix##set_set(prefix##set *self, type key) \
+static inline void SET##alias##_set(SET##alias *self, type key) \
 { \
 	size_t i, oldsize; \
-	prefix##set_elem *oldarr; \
+	SET_ELEM##alias *oldarr; \
 \
 	for (i = hash(key) % self->size; \
 			self->arr[i].present; i = (i + 1) % self->size) \
@@ -97,13 +95,12 @@ prefix##set_set(prefix##set *self, type key) \
 \
 		for (i = 0; i < oldsize; ++i) \
 			if (oldarr[i].present && !oldarr[i].deleted) \
-				prefix##set_set(self, oldarr[i].key); \
+				SET##alias##_set(self, oldarr[i].key); \
 \
 		free(oldarr); \
 	} \
 } \
-static inline void \
-prefix##set_unset(prefix##set *self, type key) \
+static inline void SET##alias##_unset(SET##alias *self, type key) \
 { \
 	size_t i; \
 	for (i = hash(key) % self->size; \
@@ -116,8 +113,7 @@ prefix##set_unset(prefix##set *self, type key) \
 		} \
 } \
 \
-static inline _Bool \
-prefix##set_isset(prefix##set *self, type key) \
+static inline _Bool SET##alias##_isset(SET##alias *self, type key) \
 { \
 	size_t i; \
 	for (i = hash(key) % self->size; \
