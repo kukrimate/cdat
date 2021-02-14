@@ -59,12 +59,14 @@ static inline void VEC##alias##_addall(VEC##alias *self, type *m, size_t n) \
 	memcpy(self->arr + self->n - n, m, n * sizeof(type)); \
 } \
 \
-static inline type *VEC##alias##_push(VEC##alias *self) \
+static inline type VEC##alias##_pop(VEC##alias *self) \
 { \
-	if (++self->n > self->size) \
-		VEC##alias##_reserve(self, self->n * VEC_GROW_FACTOR); \
-	return self->arr + self->n - 1; \
+	return self->arr[--self->n]; \
+} \
+\
+static inline type VEC##alias##_top(VEC##alias *self) \
+{ \
+	return self->arr[self->n - 1]; \
 }
-
 
 #endif
