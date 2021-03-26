@@ -11,7 +11,7 @@ static inline unsigned int djb2_hash(const char *str)
 
 	r = 5381;
 	for (; *str; ++str)
-		r = (r << 15) + r + *str;
+		r = (r << 5) + r + *str;
 	return r;
 }
 
