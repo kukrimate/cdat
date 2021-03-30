@@ -1,19 +1,4 @@
-/*
- * Unordered map tests
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <assert.h>
-#include <map.h>
-#include <djb2.h>
-
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
-
 MAP_GEN(char *, char *, djb2_hash, !strcmp, str)
-MAP_GEN(int, char *, IHASH, ICOMPARE, int)
 
 struct item {
 	char *k, *v;
@@ -74,78 +59,16 @@ static struct item items[] = {
 	{ .k = "duplicate", .v = "duplicate val" },
 };
 
-static void test_string()
+void t_map1_str(void)
 {
 	MAPstr strmap;
-	size_t i;
-
-	printf("Running string map test... ");
-
 	MAPstr_init(&strmap);
 
-	for (i = 0; i < ARRAY_SIZE(items); ++i)
+	for (size_t i = 0; i < ARRAY_SIZE(items); ++i)
 		*MAPstr_put(&strmap, items[i].k) = items[i].v;
 
-	for (i = 0; i < ARRAY_SIZE(items); ++i)
+	for (size_t i = 0; i < ARRAY_SIZE(items); ++i)
 		assert(*MAPstr_get(&strmap, items[i].k) == items[i].v);
 
 	MAPstr_free(&strmap);
-
-	printf("OK\n");
-}
-
-struct item1 {
-	int k;
-	char *v;
-};
-
-static struct item1 items1[] = {
-	{ .k = 18, .v = "some val 16" },
-	{ .k = 65, .v = "some val 17" },
-	{ .k = 6215, .v = "some val 18" },
-	{ .k = 15555, .v = "some val 19" },
-	{ .k = 145, .v = "some val 20" },
-	{ .k = 5676, .v = "some val 21" },
-	{ .k = 4356, .v = "some val 22" },
-	{ .k = 42456, .v = "some val 23" },
-	{ .k = 54244, .v = "some val 24" },
-};
-
-static struct item1 items1_del[] = {
-	{ .k = 18, .v = "crap val 1" },
-	{ .k = 6215,   .v = "crap val 2" },
-	{ .k = 4356,  .v = "crap val 3" },
-	{ .k = 145,  .v = "crap val 4" },
-};
-
-static void test_int()
-{
-	MAPint intmap;
-	size_t i;
-
-	printf("Running integer map test... ");
-
-	MAPint_init(&intmap);
-
-	for (i = 0; i < ARRAY_SIZE(items1_del); ++i) {
-		*MAPint_put(&intmap, items1_del[i].k) = items1_del[i].v;
-		MAPint_del(&intmap, items1_del[i].k);
-	}
-	for (i = 0; i < ARRAY_SIZE(items1_del); ++i)
-		assert(!MAPint_get(&intmap, items1_del[i].k));
-
-	for (i = 0; i < ARRAY_SIZE(items1); ++i)
-		*MAPint_put(&intmap, items1[i].k) = items1[i].v;
-	for (i = 0; i < ARRAY_SIZE(items1); ++i)
-		assert(*MAPint_get(&intmap, items1[i].k) == items1[i].v);
-
-	MAPint_free(&intmap);
-
-	printf("OK\n");
-}
-
-int main()
-{
-	test_string();
-	test_int();
 }
