@@ -1,4 +1,4 @@
-MAP_GEN(int, char *, IHASH, ICOMPARE, int)
+MAP_GEN(int, char *, inthash, intcmp, int)
 
 struct item1 {
     int k;
@@ -26,20 +26,20 @@ static struct item1 items1_del[] = {
 
 void t_map2_int(void)
 {
-    MAPint intmap;
-    MAPint_init(&intmap);
+    Map_int intmap;
+    map_int_init(&intmap);
 
     for (size_t i = 0; i < ARRAY_SIZE(items1_del); ++i) {
-        *MAPint_put(&intmap, items1_del[i].k) = items1_del[i].v;
-        MAPint_del(&intmap, items1_del[i].k);
+        *map_int_put(&intmap, items1_del[i].k) = items1_del[i].v;
+        map_int_del(&intmap, items1_del[i].k);
     }
     for (size_t i = 0; i < ARRAY_SIZE(items1_del); ++i)
-        assert(!MAPint_get(&intmap, items1_del[i].k));
+        assert(!map_int_get(&intmap, items1_del[i].k));
 
     for (size_t i = 0; i < ARRAY_SIZE(items1); ++i)
-        *MAPint_put(&intmap, items1[i].k) = items1[i].v;
+        *map_int_put(&intmap, items1[i].k) = items1[i].v;
     for (size_t i = 0; i < ARRAY_SIZE(items1); ++i)
-        assert(*MAPint_get(&intmap, items1[i].k) == items1[i].v);
+        assert(*map_int_get(&intmap, items1[i].k) == items1[i].v);
 
-    MAPint_free(&intmap);
+    map_int_free(&intmap);
 }

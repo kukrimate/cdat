@@ -71,7 +71,7 @@ static inline void SET##alias##_set(SET##alias *self, type key) \
 \
 	for (i = hash(key) % self->size; \
 			self->arr[i].present; i = (i + 1) % self->size) \
-		if (cmp(self->arr[i].key, key)) \
+		if (!cmp(self->arr[i].key, key)) \
 			break; \
 \
 	if (!self->arr[i].present) \
@@ -105,7 +105,7 @@ static inline void SET##alias##_unset(SET##alias *self, type key) \
 	size_t i; \
 	for (i = hash(key) % self->size; \
 			self->arr[i].present; i = (i + 1) % self->size) \
-		if (cmp(self->arr[i].key, key)) { \
+		if (!cmp(self->arr[i].key, key)) { \
 			if (self->arr[i].deleted) \
 				return; \
 			self->arr[i].deleted = 1; \
@@ -118,7 +118,7 @@ static inline _Bool SET##alias##_isset(SET##alias *self, type key) \
 	size_t i; \
 	for (i = hash(key) % self->size; \
 			self->arr[i].present; i = (i + 1) % self->size) \
-		if (cmp(self->arr[i].key, key))\
+		if (!cmp(self->arr[i].key, key))\
 			return !self->arr[i].deleted; \
 	return 0; \
 }

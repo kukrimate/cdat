@@ -30,11 +30,11 @@ static inline size_t round_pow2(size_t size)
 }
 
 /* State of a bucket */
-enum {
+typedef enum {
     BS_EMPTY,  // Empty
     BS_DUMMY,  // Previously active
     BS_ACTIVE, // Currently active
-};
+} BucketState;
 
 /*
  * Generate type specific definitions
@@ -42,34 +42,34 @@ enum {
 #define MAP_GEN(ktype, vtype, khash, kcmp, alias)                              \
                                                                                \
 typedef struct {                                                               \
-    unsigned char state;                                                       \
+    BucketState state;                                                         \
     size_t hash;                                                               \
     ktype key;                                                                 \
     vtype val;                                                                 \
-} MAP_ELEM##alias;                                                             \
+} Bucket_##alias;                                                              \
                                                                                \
 typedef struct {                                                               \
     size_t active_cnt;                                                         \
     size_t size;                                                               \
-    MAP_ELEM##alias *arr;                                                      \
-} MAP##alias;                                                                  \
+    Bucket_##alias *arr;                                                       \
+} Map_##alias;                                                                 \
                                                                                \
-static inline void MAP##alias##_init(MAP##alias *self)                         \
+static inline void map_##alias##_init(Map_##alias *self)                       \
 {                                                                              \
     self->active_cnt = 0;                                                      \
     self->size = MAP_MINSIZE;                                                  \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
 }                                                                              \
                                                                                \
-static inline void MAP##alias##_free(MAP##alias *self)                         \
+static inline void map_##alias##_free(Map_##alias *self)                       \
 {                                                                              \
     free(self->arr);                                                           \
 }                                                                              \
                                                                                \
-static inline void MAP##alias##_resize(MAP##alias *self)                       \
+static inline void map_##alias##_resize(Map_##alias *self)                     \
 {                                                                              \
     size_t oldsize = self->size;                                               \
-    MAP_ELEM##alias *oldarr = self->arr;                                       \
+    Bucket_##alias *oldarr = self->arr;                                        \
                                                                                \
     self->size = round_pow2(self->active_cnt * MAP_RESIZE_FACTOR);             \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
@@ -91,10 +91,10 @@ static inline void MAP##alias##_resize(MAP##alias *self)                       \
     free(oldarr);                                                              \
 }                                                                              \
                                                                                \
-static inline vtype *MAP##alias##_put(MAP##alias *self, ktype key)             \
+static inline vtype *map_##alias##_put(Map_##alias *self, ktype key)           \
 {                                                                              \
     if (self->active_cnt >= MAP_RESIZE_TRESHOLD(self->size))                   \
-        MAP##alias##_resize(self);                                             \
+        map_##alias##_resize(self);                                            \
                                                                                \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
@@ -104,7 +104,7 @@ static inline vtype *MAP##alias##_put(MAP##alias *self, ktype key)             \
             ++self->active_cnt;                                                \
             break;                                                             \
         }                                                                      \
-        if (self->arr[i].hash == hash && kcmp(self->arr[i].key, key)) {        \
+        if (self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {       \
             /* Modify active bucket with a matching key */                     \
             break;                                                             \
         }                                                                      \
@@ -118,13 +118,13 @@ static inline vtype *MAP##alias##_put(MAP##alias *self, ktype key)             \
     return &self->arr[i].val;                                                  \
 }                                                                              \
                                                                                \
-static inline vtype *MAP##alias##_get(MAP##alias *self, ktype key)             \
+static inline vtype *map_##alias##_get(Map_##alias *self, ktype key)           \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
     while (self->arr[i].state != BS_EMPTY) {                                   \
         if (self->arr[i].state == BS_ACTIVE &&                                 \
-                self->arr[i].hash == hash && kcmp(self->arr[i].key, key)) {    \
+                self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {   \
             /* Key of active bucket matches */                                 \
             return &self->arr[i].val;                                          \
         }                                                                      \
@@ -134,13 +134,13 @@ static inline vtype *MAP##alias##_get(MAP##alias *self, ktype key)             \
     return NULL;                                                               \
 }                                                                              \
                                                                                \
-static inline void MAP##alias##_del(MAP##alias *self, ktype key)               \
+static inline void map_##alias##_del(Map_##alias *self, ktype key)             \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
     while (self->arr[i].state != BS_EMPTY) {                                   \
         if (self->arr[i].state == BS_ACTIVE &&                                 \
-                self->arr[i].hash == hash && kcmp(self->arr[i].key, key)) {    \
+                self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {   \
             /* Key of active bucket matches */                                 \
             self->arr[i].state = BS_DUMMY;                                     \
             --self->active_cnt;                                                \
@@ -150,11 +150,5 @@ static inline void MAP##alias##_del(MAP##alias *self, ktype key)               \
         i = (i * 5 + perturb + 1) % self->size;                                \
     }                                                                          \
 }                                                                              \
-
-/*
- * Hash and compare for scaler values
- */
-#define IHASH(x) (x)
-#define ICOMPARE(x, y) ((x) == (y))
 
 #endif

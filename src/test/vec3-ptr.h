@@ -9,11 +9,11 @@ static void *ptrs[] = {
 
 void t_vec3_ptr(void)
 {
-    VECpvoid a;
-    VECpvoid_init(&a);
+    Vec_pvoid a;
+    vec_pvoid_init(&a);
 
     for (size_t i = 0; i < sizeof(ptrs) / sizeof(void *); ++i)
-        VECpvoid_add(&a, ptrs[i]);
+        vec_pvoid_add(&a, ptrs[i]);
     assert(!memcmp(ptrs, a.arr, sizeof(ptrs)));
-    VECpvoid_free(&a);
+    vec_pvoid_free(&a);
 }

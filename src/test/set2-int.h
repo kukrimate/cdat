@@ -1,6 +1,4 @@
-#define ihash(x) x
-#define icmp(x, y) x == y
-SET_GEN(int, ihash, icmp, int)
+SET_GEN(int, inthash, intcmp, int)
 
 void t_set2_int(void)
 {

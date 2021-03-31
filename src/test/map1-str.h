@@ -1,4 +1,4 @@
-MAP_GEN(char *, char *, djb2_hash, !strcmp, str)
+MAP_GEN(char *, char *, strhash, strcmp, str)
 
 struct item {
 	char *k, *v;
@@ -61,14 +61,14 @@ static struct item items[] = {
 
 void t_map1_str(void)
 {
-	MAPstr strmap;
-	MAPstr_init(&strmap);
+	Map_str strmap;
+	map_str_init(&strmap);
 
 	for (size_t i = 0; i < ARRAY_SIZE(items); ++i)
-		*MAPstr_put(&strmap, items[i].k) = items[i].v;
+		*map_str_put(&strmap, items[i].k) = items[i].v;
 
 	for (size_t i = 0; i < ARRAY_SIZE(items); ++i)
-		assert(*MAPstr_get(&strmap, items[i].k) == items[i].v);
+		assert(*map_str_get(&strmap, items[i].k) == items[i].v);
 
-	MAPstr_free(&strmap);
+	map_str_free(&strmap);
 }

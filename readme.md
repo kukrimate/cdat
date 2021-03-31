@@ -1,4 +1,4 @@
-# libkm
+# cdat
 Template library for C to facilitate higher level programming.
 Please note that this library's primary purpose is to suit the author's
 personal projects, as such documentation is non-existent and the API stability

@@ -1,4 +1,4 @@
-SET_GEN(const char *, djb2_hash, !strcmp, str)
+SET_GEN(const char *, strhash, strcmp, str)
 
 /* List of string to add to the set */
 static const char *str_set[] = {

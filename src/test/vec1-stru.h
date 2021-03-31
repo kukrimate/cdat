@@ -111,12 +111,12 @@ static struct my teststructs[] = {
 
 void t_vec1_stru(void)
 {
-	VECmy a;
-	VECmy_init(&a);
+	Vec_my a;
+	vec_my_init(&a);
 
 	for (size_t i = 0; i < sizeof(teststructs) / sizeof(struct my); ++i)
-		VECmy_add(&a, teststructs[i]);
+		vec_my_add(&a, teststructs[i]);
 	assert(!memcmp(a.arr, teststructs, sizeof(teststructs)));
 
-	VECmy_free(&a);
+	vec_my_free(&a);
 }
