@@ -5,6 +5,8 @@
 #ifndef PQ_H
 #define PQ_H
 
+#include <cdat.h>
+
 /*
  * Minimum size of the underlying array
  */

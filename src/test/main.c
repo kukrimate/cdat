@@ -1,16 +1,11 @@
-#include <assert.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <dat.h>
 #include <map.h>
 #include <pq.h>
 #include <vec.h>
 #include <set.h>
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
+#include <assert.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "map1-str.h"
 #include "map2-int.h"

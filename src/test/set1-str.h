@@ -48,20 +48,20 @@ static const char *str_notset[] = {
 
 void t_set1_str(void)
 {
-	SETstr s;
-	SETstr_init(&s);
+	Set_str s;
+	set_str_init(&s);
 
 	for (size_t i = 0; i < ARRAY_SIZE(str_set); ++i)
-		SETstr_set(&s, str_set[i]);
+		set_str_set(&s, str_set[i]);
 	for (size_t i = 0; i < ARRAY_SIZE(str_notset); ++i)
-		assert(!SETstr_isset(&s, str_notset[i]));
+		assert(!set_str_isset(&s, str_notset[i]));
 	for (size_t i = 0; i < ARRAY_SIZE(str_set); ++i)
-		assert(SETstr_isset(&s, str_set[i]));
+		assert(set_str_isset(&s, str_set[i]));
 
 	for (size_t i = 0; i < ARRAY_SIZE(str_set); ++i)
-		SETstr_unset(&s, str_set[i]);
+		set_str_unset(&s, str_set[i]);
 	for (size_t i = 0; i < ARRAY_SIZE(str_notset); ++i)
-		SETstr_set(&s, str_notset[i]);
+		set_str_set(&s, str_notset[i]);
 
-	SETstr_free(&s);
+	set_str_free(&s);
 }

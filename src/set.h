@@ -5,122 +5,142 @@
 #ifndef SET_H
 #define SET_H
 
-/*
- * Number of preallocated buckets
- */
-#ifndef SET_PREALLOC
-#define SET_PREALLOC 10
+#include <cdat.h>
+
+/* Minimum number of buckets */
+#ifndef SET_MINSIZE
+#define SET_MINSIZE 8
 #endif
 
-/*
- * Rehash the table if the load is over this number
- */
-#ifndef SET_REHASH_TRESHOLD
-#define SET_REHASH_TRESHOLD(size) (size * 3 / 4)
+/* Maximum number of used buckets allowed for a given table */
+#ifndef SET_RESIZE_TRESHOLD
+#define SET_RESIZE_TRESHOLD(size) (size * 2 / 3)
 #endif
 
-/*
- * Grow the table if the load would be over this number after a rehash
- */
-#ifndef SET_GROW_TRESHOLD
-#define SET_GROW_TRESHOLD(size) (size / 2)
+/* The new table size will be round_pow2(self->used * SET_RESIZE_FACTOR) */
+#ifndef SET_RESIZE_FACTOR
+#define SET_RESIZE_FACTOR 3
 #endif
 
-/*
- * Multiplier for the size when a grow is triggered
- */
-#ifndef SET_GROW_FACTOR
-#define SET_GROW_FACTOR 2
-#endif
+
+/* State of a bucket */
+typedef enum {
+    SBS_EMPTY,  // Empty
+    SBS_DUMMY,  // Previously active
+    SBS_ACTIVE, // Currently active
+} SetBucketState;
 
 /*
  * Generate type specific definitions
  */
-#define SET_GEN(type, hash, cmp, alias) \
-\
-typedef struct { \
-	_Bool present; \
-	_Bool deleted; \
-	type key; \
-} SET_ELEM##alias; \
-\
-typedef struct { \
-	size_t present_cnt; \
-	size_t deleted_cnt; \
-	size_t size; \
-	SET_ELEM##alias *arr; \
-} SET##alias; \
-\
-static inline void SET##alias##_init(SET##alias *self) \
-{ \
-	self->present_cnt = 0; \
-	self->deleted_cnt = 0; \
-	self->size = SET_PREALLOC; \
-	self->arr = calloc(self->size, sizeof(*self->arr)); \
-} \
-\
-static inline void SET##alias##_free(SET##alias *self) \
-{ \
-	free(self->arr); \
-} \
-\
-static inline void SET##alias##_set(SET##alias *self, type key) \
-{ \
-	size_t i, oldsize; \
-	SET_ELEM##alias *oldarr; \
-\
-	for (i = hash(key) % self->size; \
-			self->arr[i].present; i = (i + 1) % self->size) \
-		if (!cmp(self->arr[i].key, key)) \
-			break; \
-\
-	if (!self->arr[i].present) \
-		++self->present_cnt; \
-	else if (self->arr[i].deleted) \
-		--self->deleted_cnt; \
-\
-	self->arr[i].present = 1; \
-	self->arr[i].deleted = 0; \
-	self->arr[i].key = key; \
-\
-	if (self->present_cnt > SET_REHASH_TRESHOLD(self->size)) { \
-		oldsize = self->size; \
-		oldarr = self->arr; \
-\
-		if (self->present_cnt - self->deleted_cnt > SET_GROW_TRESHOLD(self->size)) \
-			self->size *= SET_GROW_FACTOR; \
-		self->present_cnt = 0; \
-		self->deleted_cnt = 0; \
-		self->arr = calloc(self->size, sizeof(*self->arr)); \
-\
-		for (i = 0; i < oldsize; ++i) \
-			if (oldarr[i].present && !oldarr[i].deleted) \
-				SET##alias##_set(self, oldarr[i].key); \
-\
-		free(oldarr); \
-	} \
-} \
-static inline void SET##alias##_unset(SET##alias *self, type key) \
-{ \
-	size_t i; \
-	for (i = hash(key) % self->size; \
-			self->arr[i].present; i = (i + 1) % self->size) \
-		if (!cmp(self->arr[i].key, key)) { \
-			if (self->arr[i].deleted) \
-				return; \
-			self->arr[i].deleted = 1; \
-			++self->deleted_cnt; \
-		} \
-} \
-\
-static inline _Bool SET##alias##_isset(SET##alias *self, type key) \
-{ \
-	size_t i; \
-	for (i = hash(key) % self->size; \
-			self->arr[i].present; i = (i + 1) % self->size) \
-		if (!cmp(self->arr[i].key, key))\
-			return !self->arr[i].deleted; \
-	return 0; \
-}
+#define SET_GEN(ktype, khash, kcmp, alias)                                     \
+                                                                               \
+typedef struct {                                                               \
+    SetBucketState state;                                                      \
+    size_t hash;                                                               \
+    ktype key;                                                                 \
+} SetBucket_##alias;                                                           \
+                                                                               \
+typedef struct {                                                               \
+    size_t active_cnt;                                                         \
+    size_t size;                                                               \
+    SetBucket_##alias *arr;                                                    \
+} Set_##alias;                                                                 \
+                                                                               \
+static inline void set_##alias##_init(Set_##alias *self)                       \
+{                                                                              \
+    self->active_cnt = 0;                                                      \
+    self->size = SET_MINSIZE;                                                  \
+    self->arr = calloc(self->size, sizeof *self->arr);                         \
+}                                                                              \
+                                                                               \
+static inline void set_##alias##_free(Set_##alias *self)                       \
+{                                                                              \
+    free(self->arr);                                                           \
+}                                                                              \
+                                                                               \
+static inline void set_##alias##_resize(Set_##alias *self)                     \
+{                                                                              \
+    size_t oldsize = self->size;                                               \
+    SetBucket_##alias *oldarr = self->arr;                                     \
+                                                                               \
+    self->size = round_pow2(self->active_cnt * SET_RESIZE_FACTOR);             \
+    self->arr = calloc(self->size, sizeof *self->arr);                         \
+                                                                               \
+    for (size_t i = 0; i < oldsize; ++i)                                       \
+        if (oldarr[i].state == SBS_ACTIVE) {                                   \
+            /* Put contents of active bucket into the new table */             \
+            size_t perturb = oldarr[i].hash, j = perturb % self->size;         \
+            for (;;) {                                                         \
+                if (self->arr[j].state != SBS_ACTIVE) {                        \
+                    self->arr[j] = oldarr[i];                                  \
+                    break;                                                     \
+                }                                                              \
+                perturb >>= 5;                                                 \
+                j = (j * 5 + perturb + 1) % self->size;                        \
+            }                                                                  \
+        }                                                                      \
+                                                                               \
+    free(oldarr);                                                              \
+}                                                                              \
+                                                                               \
+static inline void set_##alias##_set(Set_##alias *self, ktype key)             \
+{                                                                              \
+    if (self->active_cnt >= SET_RESIZE_TRESHOLD(self->size))                   \
+        set_##alias##_resize(self);                                            \
+                                                                               \
+    size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
+                                                                               \
+    for (;;) {                                                                 \
+        if (self->arr[i].state != SBS_ACTIVE) {                                \
+            /* Fill non-active bucket */                                       \
+            ++self->active_cnt;                                                \
+            break;                                                             \
+        }                                                                      \
+        if (self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {       \
+            /* Already set, so we can just return */                           \
+            return;                                                            \
+        }                                                                      \
+        perturb >>= 5;                                                         \
+        i = (i * 5 + perturb + 1) % self->size;                                \
+    }                                                                          \
+                                                                               \
+    self->arr[i].state = SBS_ACTIVE;                                           \
+    self->arr[i].hash = hash;                                                  \
+    self->arr[i].key = key;                                                    \
+}                                                                              \
+                                                                               \
+static inline _Bool set_##alias##_isset(Set_##alias *self, ktype key)          \
+{                                                                              \
+    size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
+                                                                               \
+    while (self->arr[i].state != SBS_EMPTY) {                                  \
+        if (self->arr[i].state == SBS_ACTIVE &&                                \
+                self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {   \
+            /* Key of active bucket matches */                                 \
+            return 1;                                                          \
+        }                                                                      \
+        perturb >>= 5;                                                         \
+        i = (i * 5 + perturb + 1) % self->size;                                \
+    }                                                                          \
+    return 0;                                                                  \
+}                                                                              \
+                                                                               \
+static inline void set_##alias##_unset(Set_##alias *self, ktype key)           \
+{                                                                              \
+    size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
+                                                                               \
+    while (self->arr[i].state != SBS_EMPTY) {                                  \
+        if (self->arr[i].state == SBS_ACTIVE &&                                \
+                self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {   \
+            /* Key of active bucket matches */                                 \
+            self->arr[i].state = SBS_DUMMY;                                    \
+            --self->active_cnt;                                                \
+            return;                                                            \
+        }                                                                      \
+        perturb >>= 5;                                                         \
+        i = (i * 5 + perturb + 1) % self->size;                                \
+    }                                                                          \
+}                                                                              \
 
 #endif

@@ -5,6 +5,8 @@
 #ifndef VEC_H
 #define VEC_H
 
+#include <cdat.h>
+
 /*
  * Minimum size
  */
