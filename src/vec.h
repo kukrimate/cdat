@@ -57,12 +57,17 @@ static inline void fn_pre##_add(stru_name *self, type m)                       \
     self->arr[self->n - 1] = m;                                                \
 }                                                                              \
                                                                                \
-static inline void fn_pre##_addall(stru_name *self, type *m, size_t n)         \
+static inline void fn_pre##_addall(stru_name *self, type const *m, size_t n)   \
 {                                                                              \
     self->n += n;                                                              \
     if (self->n > self->size)                                                  \
         fn_pre##_reserve(self, self->n * VEC_GROW_FACTOR);                     \
     memcpy(self->arr + self->n - n, m, n * sizeof(type));                      \
+}                                                                              \
+                                                                               \
+static inline void fn_pre##_extend(stru_name *self, stru_name *other)          \
+{                                                                              \
+    fn_pre##_addall(self, other->arr, other->n);                               \
 }                                                                              \
                                                                                \
 static inline type *fn_pre##_push(stru_name *self)                             \
@@ -81,5 +86,27 @@ static inline type *fn_pre##_top(stru_name *self)                              \
 {                                                                              \
     return self->arr + self->n - 1;                                            \
 }                                                                              \
+                                                                               \
+static inline type fn_pre##_pop(stru_name *self)                               \
+{                                                                              \
+    return self->arr[--self->n];                                               \
+}                                                                              \
+                                                                               \
+//
+// String builder (character vector) type
+//
+
+VEC_GEN(char, StringBuilder, sb)
+
+static inline char *sb_str(StringBuilder *self)
+{
+    sb_add(self, 0);
+    return self->arr;
+}
+
+static inline void sb_addstr(StringBuilder *self, const char *str)
+{
+    sb_addall(self, str, strlen(str));
+}
 
 #endif
