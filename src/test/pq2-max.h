@@ -1,24 +1,24 @@
-PQ_GEN(int, -intcmp, imax)
+PQ_GEN(int, -intcmp, MaxHeap, max_heap)
 
 void t_pq2_max(void)
 {
-    Pq_imax max_heap;
-    pq_imax_init(&max_heap);
+    MaxHeap max_heap;
+    max_heap_init(&max_heap);
 
     // Add 100k random integers
     srand(time(NULL));
     for (size_t cnt = 100000; cnt; --cnt) {
-        pq_imax_push(&max_heap, rand() % 100);
+        max_heap_push(&max_heap, rand() % 100);
     }
 
     // Make sure we get everything back in sorted order
-    int prev = pq_imax_pop(&max_heap);
+    int prev = max_heap_pop(&max_heap);
     while (max_heap.n) {
-        int cur = pq_imax_pop(&max_heap);
+        int cur = max_heap_pop(&max_heap);
         assert(prev >= cur);
         prev = cur;
     }
 
     // Free queue
-    pq_imax_free(&max_heap);
+    max_heap_free(&max_heap);
 }

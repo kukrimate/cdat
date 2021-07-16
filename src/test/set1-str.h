@@ -1,4 +1,4 @@
-SET_GEN(const char *, strhash, strcmp, str)
+SET_GEN(const char *, strhash, strcmp, StrSet, str_set)
 
 /* List of string to add to the set */
 static const char *str_set[] = {
@@ -48,20 +48,20 @@ static const char *str_notset[] = {
 
 void t_set1_str(void)
 {
-	Set_str s;
-	set_str_init(&s);
+	StrSet s;
+	str_set_init(&s);
 
 	for (size_t i = 0; i < ARRAY_SIZE(str_set); ++i)
-		set_str_set(&s, str_set[i]);
+		str_set_set(&s, str_set[i]);
 	for (size_t i = 0; i < ARRAY_SIZE(str_notset); ++i)
-		assert(!set_str_isset(&s, str_notset[i]));
+		assert(!str_set_isset(&s, str_notset[i]));
 	for (size_t i = 0; i < ARRAY_SIZE(str_set); ++i)
-		assert(set_str_isset(&s, str_set[i]));
+		assert(str_set_isset(&s, str_set[i]));
 
 	for (size_t i = 0; i < ARRAY_SIZE(str_set); ++i)
-		set_str_unset(&s, str_set[i]);
+		str_set_unset(&s, str_set[i]);
 	for (size_t i = 0; i < ARRAY_SIZE(str_notset); ++i)
-		set_str_set(&s, str_notset[i]);
+		str_set_set(&s, str_notset[i]);
 
-	set_str_free(&s);
+	str_set_free(&s);
 }

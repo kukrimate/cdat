@@ -12,7 +12,7 @@
 #include "pq1-min.h"
 #include "pq2-max.h"
 #include "vec1-stru.h"
-#include "vec2-char.h"
+#include "vec2-sb.h"
 #include "vec3-ptr.h"
 #include "set1-str.h"
 #include "set2-int.h"

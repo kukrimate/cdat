@@ -14,7 +14,8 @@
 #define PQ_MINSIZE 10
 #endif
 
-#define PQ_GEN(type, cmp, alias)                                               \
+#define PQ_GEN(type, cmp, stru_name, fn_pre)                                   \
+                                                                               \
 typedef struct {                                                               \
     /* Number of nodes in the tree */                                          \
     size_t n;                                                                  \
@@ -22,21 +23,21 @@ typedef struct {                                                               \
     size_t array_size;                                                         \
     /* Underlying array, storing tree nodes row-by-row, left-right */          \
     type *array;                                                               \
-} Pq_##alias;                                                                  \
+} stru_name;                                                                   \
                                                                                \
-static inline void pq_##alias##_init(Pq_##alias *self)                         \
+static inline void fn_pre##_init(stru_name *self)                              \
 {                                                                              \
     self->n = 0;                                                               \
     self->array_size = PQ_MINSIZE;                                             \
     self->array = reallocarray(NULL, self->array_size, sizeof *self->array);   \
 }                                                                              \
                                                                                \
-static inline void pq_##alias##_free(Pq_##alias *self)                         \
+static inline void fn_pre##_free(stru_name *self)                              \
 {                                                                              \
     free(self->array);                                                         \
 }                                                                              \
                                                                                \
-static inline void pq_##alias##_push(Pq_##alias *self, int new_val)            \
+static inline void fn_pre##_push(stru_name *self, int new_val)                 \
 {                                                                              \
     size_t new_idx, parent_idx;                                                \
     type tmp_val;                                                              \
@@ -64,7 +65,7 @@ static inline void pq_##alias##_push(Pq_##alias *self, int new_val)            \
     }                                                                          \
 }                                                                              \
                                                                                \
-static inline void pq_##alias##_heapify(type *array, size_t size, size_t root) \
+static inline void fn_pre##_heapify(type *array, size_t size, size_t root)     \
 {                                                                              \
     size_t min_idx, left_idx, right_idx;                                       \
     type tmp_val;                                                              \
@@ -85,7 +86,7 @@ static inline void pq_##alias##_heapify(type *array, size_t size, size_t root) \
         if (min_idx == root)                                                   \
             return;                                                            \
                                                                                \
-        /* Smallest children becomes the root */                               \
+        /* Smallest child becomes the root */                                  \
         tmp_val = array[root];                                                 \
         array[root] = array[min_idx];                                          \
         array[min_idx] = tmp_val;                                              \
@@ -95,7 +96,7 @@ static inline void pq_##alias##_heapify(type *array, size_t size, size_t root) \
     }                                                                          \
 }                                                                              \
                                                                                \
-static inline type pq_##alias##_pop(Pq_##alias *self)                          \
+static inline type fn_pre##_pop(stru_name *self)                               \
 {                                                                              \
     type root_val;                                                             \
                                                                                \
@@ -106,7 +107,7 @@ static inline type pq_##alias##_pop(Pq_##alias *self)                          \
     self->array[0] = self->array[--self->n];                                   \
                                                                                \
     /* Make sure the new tree is still a min-heap */                           \
-    pq_##alias##_heapify(self->array, self->n, 0);                             \
+    fn_pre##_heapify(self->array, self->n, 0);                                 \
     return root_val;                                                           \
 }                                                                              \
 

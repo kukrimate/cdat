@@ -1,4 +1,4 @@
-VEC_GEN(void *, pvoid)
+VEC_GEN(void *, PtrVec, ptr_vec)
 
 static void *ptrs[] = {
     NULL,
@@ -9,11 +9,11 @@ static void *ptrs[] = {
 
 void t_vec3_ptr(void)
 {
-    Vec_pvoid a;
-    vec_pvoid_init(&a);
+    PtrVec a;
+    ptr_vec_init(&a);
 
     for (size_t i = 0; i < sizeof(ptrs) / sizeof(void *); ++i)
-        vec_pvoid_add(&a, ptrs[i]);
+        ptr_vec_add(&a, ptrs[i]);
     assert(!memcmp(ptrs, a.arr, sizeof(ptrs)));
-    vec_pvoid_free(&a);
+    ptr_vec_free(&a);
 }

@@ -2,8 +2,8 @@
  * Common helpers
  */
 
-#ifndef DAT_H
-#define DAT_H
+#ifndef CDAT_H
+#define CDAT_H
 
 #include <stdint.h>
 #include <stdlib.h>

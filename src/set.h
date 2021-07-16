@@ -33,36 +33,36 @@ typedef enum {
 /*
  * Generate type specific definitions
  */
-#define SET_GEN(ktype, khash, kcmp, alias)                                     \
+#define SET_GEN(ktype, khash, kcmp, stru_name, fn_pre)                         \
                                                                                \
 typedef struct {                                                               \
     SetBucketState state;                                                      \
     size_t hash;                                                               \
     ktype key;                                                                 \
-} SetBucket_##alias;                                                           \
+} stru_name##Bucket;                                                           \
                                                                                \
 typedef struct {                                                               \
     size_t active_cnt;                                                         \
     size_t size;                                                               \
-    SetBucket_##alias *arr;                                                    \
-} Set_##alias;                                                                 \
+    stru_name##Bucket *arr;                                                    \
+} stru_name;                                                                   \
                                                                                \
-static inline void set_##alias##_init(Set_##alias *self)                       \
+static inline void fn_pre##_init(stru_name *self)                              \
 {                                                                              \
     self->active_cnt = 0;                                                      \
     self->size = SET_MINSIZE;                                                  \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
 }                                                                              \
                                                                                \
-static inline void set_##alias##_free(Set_##alias *self)                       \
+static inline void fn_pre##_free(stru_name *self)                              \
 {                                                                              \
     free(self->arr);                                                           \
 }                                                                              \
                                                                                \
-static inline void set_##alias##_resize(Set_##alias *self)                     \
+static inline void fn_pre##_resize(stru_name *self)                            \
 {                                                                              \
     size_t oldsize = self->size;                                               \
-    SetBucket_##alias *oldarr = self->arr;                                     \
+    stru_name##Bucket *oldarr = self->arr;                                     \
                                                                                \
     self->size = round_pow2(self->active_cnt * SET_RESIZE_FACTOR);             \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
@@ -84,10 +84,10 @@ static inline void set_##alias##_resize(Set_##alias *self)                     \
     free(oldarr);                                                              \
 }                                                                              \
                                                                                \
-static inline void set_##alias##_set(Set_##alias *self, ktype key)             \
+static inline void fn_pre##_set(stru_name *self, ktype key)                    \
 {                                                                              \
     if (self->active_cnt >= SET_RESIZE_TRESHOLD(self->size))                   \
-        set_##alias##_resize(self);                                            \
+        fn_pre##_resize(self);                                                 \
                                                                                \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
@@ -110,7 +110,7 @@ static inline void set_##alias##_set(Set_##alias *self, ktype key)             \
     self->arr[i].key = key;                                                    \
 }                                                                              \
                                                                                \
-static inline _Bool set_##alias##_isset(Set_##alias *self, ktype key)          \
+static inline _Bool fn_pre##_isset(stru_name *self, ktype key)                 \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
@@ -126,7 +126,7 @@ static inline _Bool set_##alias##_isset(Set_##alias *self, ktype key)          \
     return 0;                                                                  \
 }                                                                              \
                                                                                \
-static inline void set_##alias##_unset(Set_##alias *self, ktype key)           \
+static inline void fn_pre##_unset(stru_name *self, ktype key)                  \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \

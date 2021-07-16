@@ -1,10 +1,8 @@
-MAP_GEN(char *, char *, strhash, strcmp, str)
+MAP_GEN(char *, char *, strhash, strcmp, TestMap, test_map)
 
-struct item {
+static struct {
 	char *k, *v;
-};
-
-static struct item items[] = {
+} items[] = {
 	{ .k = "some key 0", .v = "some val 0" },
 	{ .k = "some key 1", .v = "some val 1" },
 	{ .k = "some key 2", .v = "some val 2" },
@@ -61,14 +59,14 @@ static struct item items[] = {
 
 void t_map1_str(void)
 {
-	Map_str strmap;
-	map_str_init(&strmap);
+	TestMap m;
+	test_map_init(&m);
 
 	for (size_t i = 0; i < ARRAY_SIZE(items); ++i)
-		*map_str_put(&strmap, items[i].k) = items[i].v;
+		*test_map_put(&m, items[i].k) = items[i].v;
 
 	for (size_t i = 0; i < ARRAY_SIZE(items); ++i)
-		assert(*map_str_get(&strmap, items[i].k) == items[i].v);
+		assert(*test_map_get(&m, items[i].k) == items[i].v);
 
-	map_str_free(&strmap);
+	test_map_free(&m);
 }

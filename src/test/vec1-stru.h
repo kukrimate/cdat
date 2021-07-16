@@ -3,7 +3,7 @@ struct my {
 	int   c, d;
 };
 
-VEC_GEN(struct my, my)
+VEC_GEN(struct my, MyVec, my_vec)
 
 static struct my teststructs[] = {
 	{ .a = 0, .b = 0, .c = 0, .d = 0 },
@@ -111,12 +111,12 @@ static struct my teststructs[] = {
 
 void t_vec1_stru(void)
 {
-	Vec_my a;
-	vec_my_init(&a);
+	MyVec a;
+	my_vec_init(&a);
 
 	for (size_t i = 0; i < sizeof(teststructs) / sizeof(struct my); ++i)
-		vec_my_add(&a, teststructs[i]);
+		my_vec_add(&a, teststructs[i]);
 	assert(!memcmp(a.arr, teststructs, sizeof(teststructs)));
 
-	vec_my_free(&a);
+	my_vec_free(&a);
 }

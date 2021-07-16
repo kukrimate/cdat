@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 #
 # Generate a correctly padded multi-line macro
 #

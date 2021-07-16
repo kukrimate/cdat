@@ -32,37 +32,37 @@ typedef enum {
 /*
  * Generate type specific definitions
  */
-#define MAP_GEN(ktype, vtype, khash, kcmp, alias)                              \
+#define MAP_GEN(ktype, vtype, khash, kcmp, stru_name, fn_pre)                  \
                                                                                \
 typedef struct {                                                               \
     MapBucketState state;                                                      \
     size_t hash;                                                               \
     ktype key;                                                                 \
     vtype val;                                                                 \
-} MapBucket_##alias;                                                           \
+} stru_name##Bucket;                                                           \
                                                                                \
 typedef struct {                                                               \
     size_t active_cnt;                                                         \
     size_t size;                                                               \
-    MapBucket_##alias *arr;                                                    \
-} Map_##alias;                                                                 \
+    stru_name##Bucket *arr;                                                    \
+} stru_name;                                                                   \
                                                                                \
-static inline void map_##alias##_init(Map_##alias *self)                       \
+static inline void fn_pre##_init(stru_name *self)                              \
 {                                                                              \
     self->active_cnt = 0;                                                      \
     self->size = MAP_MINSIZE;                                                  \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
 }                                                                              \
                                                                                \
-static inline void map_##alias##_free(Map_##alias *self)                       \
+static inline void fn_pre##_free(stru_name *self)                              \
 {                                                                              \
     free(self->arr);                                                           \
 }                                                                              \
                                                                                \
-static inline void map_##alias##_resize(Map_##alias *self)                     \
+static inline void fn_pre##_resize(stru_name *self)                            \
 {                                                                              \
     size_t oldsize = self->size;                                               \
-    MapBucket_##alias *oldarr = self->arr;                                     \
+    stru_name##Bucket *oldarr = self->arr;                                     \
                                                                                \
     self->size = round_pow2(self->active_cnt * MAP_RESIZE_FACTOR);             \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
@@ -84,10 +84,10 @@ static inline void map_##alias##_resize(Map_##alias *self)                     \
     free(oldarr);                                                              \
 }                                                                              \
                                                                                \
-static inline vtype *map_##alias##_put(Map_##alias *self, ktype key)           \
+static inline vtype *fn_pre##_put(stru_name *self, ktype key)                  \
 {                                                                              \
     if (self->active_cnt >= MAP_RESIZE_TRESHOLD(self->size))                   \
-        map_##alias##_resize(self);                                            \
+        fn_pre##_resize(self);                                                 \
                                                                                \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
@@ -111,7 +111,7 @@ static inline vtype *map_##alias##_put(Map_##alias *self, ktype key)           \
     return &self->arr[i].val;                                                  \
 }                                                                              \
                                                                                \
-static inline vtype *map_##alias##_get(Map_##alias *self, ktype key)           \
+static inline vtype *fn_pre##_get(stru_name *self, ktype key)                  \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
@@ -127,7 +127,7 @@ static inline vtype *map_##alias##_get(Map_##alias *self, ktype key)           \
     return NULL;                                                               \
 }                                                                              \
                                                                                \
-static inline void map_##alias##_del(Map_##alias *self, ktype key)             \
+static inline void fn_pre##_del(stru_name *self, ktype key)                    \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
