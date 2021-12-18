@@ -47,4 +47,10 @@ static inline uint32_t strhash(const char *str)
 	return hash;
 }
 
+enum {
+    S_EMPTY,
+    S_DUMMY,
+    S_ACTIVE,
+};
+
 #endif

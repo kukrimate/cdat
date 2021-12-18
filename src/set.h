@@ -7,50 +7,29 @@
 
 #include <cdat.h>
 
-/* Minimum number of buckets */
-#ifndef SET_MINSIZE
-#define SET_MINSIZE 8
-#endif
-
-/* Maximum number of used buckets allowed for a given table */
-#ifndef SET_RESIZE_TRESHOLD
-#define SET_RESIZE_TRESHOLD(size) (size * 2 / 3)
-#endif
-
-/* The new table size will be round_pow2(self->used * SET_RESIZE_FACTOR) */
-#ifndef SET_RESIZE_FACTOR
-#define SET_RESIZE_FACTOR 3
-#endif
-
-
-/* State of a bucket */
-typedef enum {
-    SBS_EMPTY,  // Empty
-    SBS_DUMMY,  // Previously active
-    SBS_ACTIVE, // Currently active
-} SetBucketState;
-
 /*
  * Generate type specific definitions
  */
 #define SET_GEN(ktype, khash, kcmp, stru_name, fn_pre)                         \
                                                                                \
 typedef struct {                                                               \
-    SetBucketState state;                                                      \
+    uint8_t state;                                                             \
     size_t hash;                                                               \
     ktype key;                                                                 \
 } stru_name##Bucket;                                                           \
                                                                                \
 typedef struct {                                                               \
-    size_t active_cnt;                                                         \
-    size_t size;                                                               \
+    size_t active;  /* Number of active buckets */                             \
+    size_t load;    /* Number of active + dummy buckets */                     \
+    size_t size;    /* Total number of buckets */                              \
     stru_name##Bucket *arr;                                                    \
 } stru_name;                                                                   \
                                                                                \
 static inline void fn_pre##_init(stru_name *self)                              \
 {                                                                              \
-    self->active_cnt = 0;                                                      \
-    self->size = SET_MINSIZE;                                                  \
+    self->active = 0;                                                          \
+    self->load = 0;                                                            \
+    self->size = 8;     /* Start with a small power of 2 as a size */          \
     self->arr = calloc(self->size, sizeof *self->arr);                         \
 }                                                                              \
                                                                                \
@@ -59,26 +38,25 @@ static inline void fn_pre##_free(stru_name *self)                              \
     free(self->arr);                                                           \
 }                                                                              \
                                                                                \
-static inline void fn_pre##_resize(stru_name *self)                            \
+static inline void fn_pre##_rehash(stru_name *self)                            \
 {                                                                              \
     size_t oldsize = self->size;                                               \
     stru_name##Bucket *oldarr = self->arr;                                     \
                                                                                \
-    self->size = round_pow2(self->active_cnt * SET_RESIZE_FACTOR);             \
-    self->arr = calloc(self->size, sizeof *self->arr);                         \
+    self->load = self->active;                  /* Dummies aren't copied */    \
+    self->size = round_pow2(self->active * 3);  /* Initial load will be 33% */ \
+                                                                               \
+    if (!(self->arr = calloc(self->size, sizeof *self->arr)))                  \
+        abort();                                                               \
                                                                                \
     for (size_t i = 0; i < oldsize; ++i)                                       \
-        if (oldarr[i].state == SBS_ACTIVE) {                                   \
-            /* Put contents of active bucket into the new table */             \
+        if (oldarr[i].state == S_ACTIVE) {                                     \
             size_t perturb = oldarr[i].hash, j = perturb % self->size;         \
-            for (;;) {                                                         \
-                if (self->arr[j].state != SBS_ACTIVE) {                        \
-                    self->arr[j] = oldarr[i];                                  \
-                    break;                                                     \
-                }                                                              \
+            while (self->arr[j].state != S_EMPTY) {                            \
                 perturb >>= 5;                                                 \
                 j = (j * 5 + perturb + 1) % self->size;                        \
             }                                                                  \
+            self->arr[j] = oldarr[i];                                          \
         }                                                                      \
                                                                                \
     free(oldarr);                                                              \
@@ -86,26 +64,35 @@ static inline void fn_pre##_resize(stru_name *self)                            \
                                                                                \
 static inline void fn_pre##_set(stru_name *self, ktype key)                    \
 {                                                                              \
-    if (self->active_cnt >= SET_RESIZE_TRESHOLD(self->size))                   \
-        fn_pre##_resize(self);                                                 \
+    if (self->load > self->size * 2 / 3)                                       \
+        fn_pre##_rehash(self);                                                 \
                                                                                \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
+    ssize_t d = -1;                                                            \
                                                                                \
     for (;;) {                                                                 \
-        if (self->arr[i].state != SBS_ACTIVE) {                                \
-            /* Fill non-active bucket */                                       \
-            ++self->active_cnt;                                                \
+        switch (self->arr[i].state) {                                          \
+        case S_EMPTY:                                                          \
+            ++self->active;     /* Active bucket count always increases */     \
+            if (d < 0)                                                         \
+                ++self->load;   /* If we cannot re-use load increases too */   \
+            else                                                               \
+                i = d;                                                         \
+            goto setkey;                                                       \
+        case S_DUMMY:                                                          \
+            if (d < 0)  /* Save first deleted bucket for re-use */             \
+                d = i;                                                         \
             break;                                                             \
-        }                                                                      \
-        if (self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {       \
-            /* Already set, so we can just return */                           \
-            return;                                                            \
+        case S_ACTIVE:                                                         \
+            if (self->arr[i].hash == hash && !kcmp(self->arr[i].key, key))     \
+                return;                                                        \
+            break;                                                             \
         }                                                                      \
         perturb >>= 5;                                                         \
         i = (i * 5 + perturb + 1) % self->size;                                \
     }                                                                          \
-                                                                               \
-    self->arr[i].state = SBS_ACTIVE;                                           \
+setkey:  /* Setup bucket with key */                                           \
+    self->arr[i].state = S_ACTIVE;                                             \
     self->arr[i].hash = hash;                                                  \
     self->arr[i].key = key;                                                    \
 }                                                                              \
@@ -114,33 +101,32 @@ static inline _Bool fn_pre##_isset(stru_name *self, ktype key)                 \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
-    while (self->arr[i].state != SBS_EMPTY) {                                  \
-        if (self->arr[i].state == SBS_ACTIVE &&                                \
-                self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {   \
-            /* Key of active bucket matches */                                 \
+    while (self->arr[i].state != S_EMPTY) {                                    \
+        if (self->arr[i].state == S_ACTIVE                                     \
+                && self->arr[i].hash == hash && !kcmp(self->arr[i].key, key))  \
             return 1;                                                          \
-        }                                                                      \
         perturb >>= 5;                                                         \
         i = (i * 5 + perturb + 1) % self->size;                                \
     }                                                                          \
     return 0;                                                                  \
 }                                                                              \
                                                                                \
-static inline void fn_pre##_unset(stru_name *self, ktype key)                  \
+static inline _Bool fn_pre##_unset(stru_name *self, ktype key)                 \
 {                                                                              \
     size_t hash = khash(key), perturb = hash, i = hash % self->size;           \
                                                                                \
-    while (self->arr[i].state != SBS_EMPTY) {                                  \
-        if (self->arr[i].state == SBS_ACTIVE &&                                \
-                self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {   \
+    while (self->arr[i].state != S_EMPTY) {                                    \
+        if (self->arr[i].state == S_ACTIVE                                     \
+                && self->arr[i].hash == hash && !kcmp(self->arr[i].key, key)) {\
             /* Key of active bucket matches */                                 \
-            self->arr[i].state = SBS_DUMMY;                                    \
-            --self->active_cnt;                                                \
-            return;                                                            \
+            self->arr[i].state = S_DUMMY;                                      \
+            --self->active;                                                    \
+            return 1;                                                          \
         }                                                                      \
         perturb >>= 5;                                                         \
         i = (i * 5 + perturb + 1) % self->size;                                \
     }                                                                          \
+    return 0;                                                                  \
 }                                                                              \
 
 #endif

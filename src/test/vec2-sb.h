@@ -5,8 +5,6 @@ static char *strings[] = {
 };
 static char *concated = "Test string 1String2\n\raggagagkakjga{{$$strdata$$}}";
 
-VEC_GEN(char, StringBuilder, sb)
-
 void t_vec2_char(void)
 {
     StringBuilder a;

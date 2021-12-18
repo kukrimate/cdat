@@ -2,10 +2,11 @@
 # Makefile to build libkm tests
 ##
 
-CFLAGS := -Isrc -std=c99 -Wall -Wextra -Wpedantic -D_GNU_SOURCE -O1 -g
+CFLAGS = -Isrc -std=c99 -Wall -Wextra -Wpedantic -D_GNU_SOURCE -O1 -g
 
 # Build test binary
-TEST_OBJ := src/test/main.o
+TEST_OBJ = src/test/main.o
+
 test: $(TEST_OBJ)
 	$(CC) $(LDFLAGS) -o $@ $^
 
